@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " #A",
+    " S#",
+    "S  "
+  ],
+  "key": {
+    "A": {
+      "item": "minecraft:amethyst_cluster"
+    },
+    "#": {
+      "item": "minecraft:blaze_rod"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "magical_staffs:blaze_staff"
+  }
+}

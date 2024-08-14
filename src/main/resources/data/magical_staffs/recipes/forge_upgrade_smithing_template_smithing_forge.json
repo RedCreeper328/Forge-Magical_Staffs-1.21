@@ -1,0 +1,12 @@
+{
+  "type": "magical_staffs:smithing_forge",
+  "addition": {
+    "tag": "magical_staffs:staff_materials"
+  },
+  "base": {
+    "tag": "magical_staffs:staffs"
+  },
+  "template": {
+    "item": "magical_staffs:forge_upgrade_smithing_template"
+  }
+}
