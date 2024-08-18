@@ -10,13 +10,14 @@
       "item": "minecraft:amethyst_cluster"
     },
     "#": {
-      "item": "minecraft:blaze_rod"
+      "tag": "minecraft:planks"
     },
     "S": {
       "item": "minecraft:stick"
     }
   },
   "result": {
-    "item": "magical_staffs:blaze_staff"
+    "count": 1,
+    "id": "magical_staffs:wooden_staff"
   }
 }

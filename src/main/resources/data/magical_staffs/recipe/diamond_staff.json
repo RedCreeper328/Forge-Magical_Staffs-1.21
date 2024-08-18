@@ -10,13 +10,14 @@
       "item": "minecraft:amethyst_cluster"
     },
     "#": {
-      "tag": "minecraft:planks"
+      "item": "minecraft:diamond"
     },
     "S": {
       "item": "minecraft:stick"
     }
   },
   "result": {
-    "item": "magical_staffs:wooden_staff"
+    "count": 1,
+    "id": "magical_staffs:diamond_staff"
   }
 }

@@ -7,12 +7,12 @@ import net.andrew_coursin.magical_staffs.effect.ModEffects;
 import net.andrew_coursin.magical_staffs.item.forge_material.ForgeMaterial;
 import net.andrew_coursin.magical_staffs.item.forge_material.ForgeMaterials;
 import net.andrew_coursin.magical_staffs.TimedEnchantment;
+import net.andrew_coursin.magical_staffs.networking.ModPacketHandler;
+import net.andrew_coursin.magical_staffs.networking.packet.StaffItemKeyBindC2SPacket;
 import net.andrew_coursin.magical_staffs.util.ModKeyBindings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
@@ -166,6 +166,10 @@ public class StaffItem extends Item {
         return isEnchantment ? (int) Math.pow(2, level - 1) : level;
     }
 
+    private int otherPointsToLevel(boolean isEnchantment, int points) {
+        return isEnchantment ? (int) (Math.log(points) / Math.log(2)) + 1 : points;
+    }
+
     private int staffSlotsToPoints(boolean isEnchantment, int slots) {
         return isEnchantment ? (int) (Math.pow(2, slots) - 1) : slots * (slots + 1) / 2;
     }
@@ -312,14 +316,14 @@ public class StaffItem extends Item {
         storedStaffEffects.setUsedSlots(isEnchantment, usedStaffSlots + this.newStaffSlots - currentStaffSlots);
 
         // Update the level, points, and slots of the stored effect
-        if (isEnchantment) storedStaffEffects.setEnchantmentValues(this.absorbEnchantment, List.of(this.newStaffLevel, this.newStaffPoints, this.newStaffSlots));
+        if (isEnchantment) storedStaffEffects.setEnchantmentValues(this.infuseEnchantment, List.of(this.newStaffLevel, this.newStaffPoints, this.newStaffSlots));
         else storedStaffEffects.setPotionValues(this.absorbPotion, List.of(this.newStaffLevel, this.newStaffPoints, this.newStaffSlots));
 
         // Apply the updated values to the item stack
         staffItemStack.set(ModComponents.STORED_STAFF_EFFECTS.get(), storedStaffEffects);
 
         // Increase the effect level
-        boolean flag = false;
+        boolean flag;
         if (isEnchantment) {
             flag = infuseEnchantment(otherItemStack, player);
         }
@@ -440,7 +444,7 @@ public class StaffItem extends Item {
         this.absorbEnchantment = isEnchantment ? otherEnchantments.keySet().stream().toList().get(this.index) : null;
         this.absorbPotion = !isEnchantment ? otherPotions.stream().toList().get(this.index).getEffect() : null;
 
-        // Calculate the point limit for the selected effect
+        // Get the current staff level, points, and slots
         StoredStaffEffects storedStaffEffects = getStoredEffects(staffItemStack);
         int currentStaffLevel = storedStaffEffects.getValue(isEnchantment, isEnchantment ? this.absorbEnchantment : this.absorbPotion, StoredStaffEffects.Indices.LEVEL);
         int currentStaffPoints = storedStaffEffects.getValue(isEnchantment, isEnchantment ? this.absorbEnchantment : this.absorbPotion, StoredStaffEffects.Indices.POINTS);
@@ -460,8 +464,7 @@ public class StaffItem extends Item {
         // Calculate new other level and points
         int currentOtherLevel = isEnchantment ? getEnchantmentLevel(this.absorbEnchantment, otherItemStack) : getPotionLevel(this.absorbPotion, otherItemStack);
         int currentOtherPoints = otherLevelToPoints(isEnchantment, currentOtherLevel);
-        if (this.absorbLevel > currentOtherLevel) this.absorbLevel = currentOtherLevel;
-        if (this.absorbLevel < 1) this.absorbLevel = 1;
+        this.absorbLevel = Math.clamp(this.absorbLevel, 1, currentOtherLevel);
         this.newOtherLevel = currentOtherLevel - this.absorbLevel;
         int newOtherPoints = otherLevelToPoints(isEnchantment, newOtherLevel);
 
@@ -516,13 +519,12 @@ public class StaffItem extends Item {
         this.infuseEnchantment = isEnchantment ? storedStaffEffects.getEnchantment(this.index) : null;
         this.infusePotion = !isEnchantment ? storedStaffEffects.getPotion(this.index) : null;
 
-        Component nameComponent = Component.translatable(isEnchantment ? this.infuseEnchantment.get().description().getString() : this.infusePotion.get().getDescriptionId());
-
-        // Calculate the current and new effect level
+        // Get the current level, and points
         int currentOtherLevel = isEnchantment ? getEnchantmentLevel(this.infuseEnchantment, otherItemStack) : getPotionLevel(this.infusePotion, otherItemStack);
-        if (this.infuseLevel > currentOtherLevel) this.infuseLevel = currentOtherLevel;
-        if (this.infuseLevel < 1) this.infuseLevel = 1;
-        this.newOtherLevel = currentOtherLevel + infuseLevel;
+        int currentOtherPoints = otherLevelToPoints(isEnchantment, currentOtherLevel);
+        int currentStaffPoints = storedStaffEffects.getValue(isEnchantment, isEnchantment ? this.infuseEnchantment : this.infusePotion, StoredStaffEffects.Indices.POINTS);
+
+        Component nameComponent = Component.translatable(isEnchantment ? this.infuseEnchantment.get().description().getString() : this.infusePotion.get().getDescriptionId());
 
         // Stop if item can not be enchanted with enchantment
         if (isEnchantment) {
@@ -530,26 +532,24 @@ public class StaffItem extends Item {
                 message(false, player, Component.translatable("message.magical_staffs.infuse.can_not_enchant", nameComponent).getString());
                 reset(false);
                 return;
-            } else if (this.newOtherLevel > this.infuseEnchantment.get().getMaxLevel()) {
+            } else if (currentOtherLevel >= this.infuseEnchantment.get().getMaxLevel()) {
                 message(false, player, Component.translatable("message.magical_staffs.infuse.max_level", nameComponent, Component.translatable("enchantment.level." + this.infuseEnchantment.get().getMaxLevel())).getString());
                 reset(false);
                 return;
             }
         }
 
-        int currentOtherPoints = otherLevelToPoints(isEnchantment, currentOtherLevel);
-        int currentStaffPoints = storedStaffEffects.getValue(isEnchantment, this.infuseEnchantment, StoredStaffEffects.Indices.POINTS);
+        // Clamp the infuse level between 1 and the maximum determined by points stored in the staff
+        int maxInfuseLevel = Math.min(otherPointsToLevel(isEnchantment, currentOtherPoints + currentStaffPoints), isEnchantment ? this.infuseEnchantment.get().getMaxLevel() : Integer.MAX_VALUE);
+        message(true, player, String.valueOf(maxInfuseLevel));
+        this.infuseLevel = Math.clamp(this.infuseLevel, 1, maxInfuseLevel - currentOtherLevel);
+
+        // Calculate new other level, and points
+        this.newOtherLevel = currentOtherLevel + infuseLevel;
         int newOtherPoints = otherLevelToPoints(isEnchantment, this.newOtherLevel);
+
+        // Calculate new staff level, points, and slots
         this.newStaffPoints = currentStaffPoints - newOtherPoints + currentOtherPoints;
-
-        // Stop if staff does not have enough points to infuse
-        if (this.newStaffPoints < 0) {
-            message(false, player, Component.translatable("message.magical_staffs.infuse.no_points", isEnchantment ? "enchantment" : "potion", newOtherPoints - currentOtherPoints).getString());
-            reset(false);
-            return;
-        }
-
-        // Calculate new staff level and slots
         double inverse = staffPointsInverse(isEnchantment, this.newStaffPoints);
         this.newStaffLevel = (int) Math.floor(inverse);
         this.newStaffSlots = (int) Math.ceil(inverse);
@@ -568,7 +568,7 @@ public class StaffItem extends Item {
     }
 
     private static int getEnchantmentLevel(Holder<Enchantment> enchantment, ItemStack otherItemStack) {
-        return EnchantmentHelper.getItemEnchantmentLevel(enchantment, otherItemStack);
+        return EnchantmentHelper.getEnchantmentsForCrafting(otherItemStack).getLevel(enchantment);
     }
 
     private static int getPotionLevel(Holder<MobEffect> potion, ItemStack otherItemStack) {
@@ -613,6 +613,59 @@ public class StaffItem extends Item {
         this.newStaffPoints = 0;
         this.newStaffSlots = 0;
         if (resetIndex) this.index = 0;
+    }
+
+    public void useKeyBind(Player player, StaffItemKeyBindC2SPacket.KEY_BINDS keyBind) {
+        switch(keyBind) {
+            case CYCLE_FORWARD -> {
+                switch(mode) {
+                    case ABSORB -> {
+                        this.absorbLevel = 1;
+                        this.prepareAbsorb(!player.getOffhandItem().isEmpty(), 1, player.getMainHandItem(), player);
+                    }
+                    case INFUSE -> {
+                        this.infuseLevel = 1;
+                        this.prepareInfuse(!player.getOffhandItem().is(Items.POTION), 1, player.getMainHandItem(), player);
+                    }
+                }
+            }
+            case CYCLE_BACKWARD -> {
+                switch(mode) {
+                    case ABSORB -> {
+                        this.absorbLevel = 1;
+                        this.prepareAbsorb(!player.getOffhandItem().isEmpty(), -1, player.getMainHandItem(), player);
+                    }
+                    case INFUSE -> {
+                        this.infuseLevel = 1;
+                        this.prepareInfuse(!player.getOffhandItem().is(Items.POTION), -1, player.getMainHandItem(), player);
+                    }
+                }
+            }
+            case CYCLE_INCREASE -> {
+                switch(mode) {
+                    case ABSORB -> {
+                        this.absorbLevel++;
+                        this.prepareAbsorb(!player.getOffhandItem().isEmpty(), 0, player.getMainHandItem(), player);
+                    }
+                    case INFUSE -> {
+                        this.infuseLevel++;
+                        this.prepareInfuse(!player.getOffhandItem().is(Items.POTION), 0, player.getMainHandItem(), player);
+                    }
+                }
+            }
+            case CYCLE_DECREASE -> {
+                switch(mode) {
+                    case ABSORB -> {
+                        this.absorbLevel--;
+                        this.prepareAbsorb(!player.getOffhandItem().isEmpty(), 0, player.getMainHandItem(), player);
+                    }
+                    case INFUSE -> {
+                        this.infuseLevel--;
+                        this.prepareInfuse(!player.getOffhandItem().is(Items.POTION), 0, player.getMainHandItem(), player);
+                    }
+                }
+            }
+        }
     }
 
     // Override public methods
@@ -672,6 +725,7 @@ public class StaffItem extends Item {
         }
 
         pPlayer.startUsingItem(pUsedHand);
+        pPlayer.inventoryMenu.broadcastFullState();
         return InteractionResultHolder.consume(itemStack);
     }
 
@@ -703,71 +757,19 @@ public class StaffItem extends Item {
         public static void onClientTick(TickEvent.ClientTickEvent event) {
             if (event.phase == TickEvent.Phase.END) {
                 while (ModKeyBindings.CYCLE_EFFECTS_FORWARD.consumeClick()) {
-                    LocalPlayer player = Minecraft.getInstance().player;
-                    if (player == null) return;
-                    if (player.getMainHandItem().getItem() instanceof StaffItem staffItem) {
-                        switch (staffItem.mode) {
-                            case ABSORB -> {
-                                staffItem.absorbLevel = 1;
-                                staffItem.prepareAbsorb(!player.getOffhandItem().isEmpty(), 1, player.getMainHandItem(), player);
-                            }
-                            case INFUSE -> {
-                                staffItem.infuseLevel = 1;
-                                staffItem.prepareInfuse(!player.getOffhandItem().is(Items.POTION), 1, player.getMainHandItem(), player);
-                            }
-                        }
-                    }
+                    ModPacketHandler.sendToServer(new StaffItemKeyBindC2SPacket(StaffItemKeyBindC2SPacket.KEY_BINDS.CYCLE_FORWARD));
                 }
 
                 while (ModKeyBindings.CYCLE_EFFECTS_BACKWARD.consumeClick()) {
-                    LocalPlayer player = Minecraft.getInstance().player;
-                    if (player == null) return;
-                    if (player.getMainHandItem().getItem() instanceof StaffItem staffItem) {
-                        switch (staffItem.mode) {
-                            case ABSORB -> {
-                                staffItem.absorbLevel = 1;
-                                staffItem.prepareAbsorb(!player.getOffhandItem().isEmpty(), -1, player.getMainHandItem(), player);
-                            }
-                            case INFUSE -> {
-                                staffItem.infuseLevel = 1;
-                                staffItem.prepareInfuse(!player.getOffhandItem().is(Items.POTION), -1, player.getMainHandItem(), player);
-                            }
-                        }
-                    }
+                    ModPacketHandler.sendToServer(new StaffItemKeyBindC2SPacket(StaffItemKeyBindC2SPacket.KEY_BINDS.CYCLE_BACKWARD));
                 }
 
                 while (ModKeyBindings.CYCLE_EFFECTS_INCREASE.consumeClick()) {
-                    LocalPlayer player = Minecraft.getInstance().player;
-                    if (player == null) return;
-                    if (player.getMainHandItem().getItem() instanceof StaffItem staffItem) {
-                        switch (staffItem.mode) {
-                            case ABSORB -> {
-                                staffItem.absorbLevel++;
-                                staffItem.prepareAbsorb(!player.getOffhandItem().isEmpty(), 0, player.getMainHandItem(), player);
-                            }
-                            case INFUSE -> {
-                                staffItem.infuseLevel++;
-                                staffItem.prepareInfuse(!player.getOffhandItem().is(Items.POTION), 0, player.getMainHandItem(), player);
-                            }
-                        }
-                    }
+                    ModPacketHandler.sendToServer(new StaffItemKeyBindC2SPacket(StaffItemKeyBindC2SPacket.KEY_BINDS.CYCLE_INCREASE));
                 }
 
                 while (ModKeyBindings.CYCLE_EFFECTS_DECREASE.consumeClick()) {
-                    LocalPlayer player = Minecraft.getInstance().player;
-                    if (player == null) return;
-                    if (player.getMainHandItem().getItem() instanceof StaffItem staffItem) {
-                        switch (staffItem.mode) {
-                            case ABSORB -> {
-                                staffItem.absorbLevel--;
-                                staffItem.prepareAbsorb(!player.getOffhandItem().isEmpty(), 0, player.getMainHandItem(), player);
-                            }
-                            case INFUSE -> {
-                                staffItem.infuseLevel--;
-                                staffItem.prepareInfuse(!player.getOffhandItem().is(Items.POTION), 0, player.getMainHandItem(), player);
-                            }
-                        }
-                    }
+                    ModPacketHandler.sendToServer(new StaffItemKeyBindC2SPacket(StaffItemKeyBindC2SPacket.KEY_BINDS.CYCLE_DECREASE));
                 }
             }
         }

@@ -10,13 +10,14 @@
       "item": "minecraft:amethyst_cluster"
     },
     "#": {
-      "item": "minecraft:diamond"
+      "item": "minecraft:gold_ingot"
     },
     "S": {
       "item": "minecraft:stick"
     }
   },
   "result": {
-    "item": "magical_staffs:diamond_staff"
+    "count": 1,
+    "id": "magical_staffs:golden_staff"
   }
 }

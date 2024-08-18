@@ -6,7 +6,7 @@ import net.andrew_coursin.magical_staffs.crafting.SmithingForgeRecipe;
 import net.andrew_coursin.magical_staffs.effect.ModEffects;
 import net.andrew_coursin.magical_staffs.item.ModItems;
 import net.andrew_coursin.magical_staffs.loot.ModLootModifiers;
-//import net.andrew_coursin.magical_staffs.networking.ModPacketHandler;
+import net.andrew_coursin.magical_staffs.networking.ModPacketHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -51,7 +51,7 @@ public class MagicalStaffs
         // Some common setup code
         LOGGER.info("HELLO FROM COMMON SETUP");
 
-//        event.enqueueWork(ModPacketHandler::register);
+        event.enqueueWork(ModPacketHandler::register);
     }
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call

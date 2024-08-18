@@ -3,7 +3,10 @@ package net.andrew_coursin.magical_staffs.components;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.Holder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.TooltipFlag;
@@ -19,11 +22,14 @@ import java.util.function.Function;
 public class StoredStaffEffects implements TooltipProvider {
     public enum Indices {LEVEL, POINTS, SLOTS}
 
+    private static final Codec<List<Integer>> ENCHANTMENT_VALUES_CODEC;
+    private static final Codec<List<Integer>> POTION_VALUES_CODEC;
     private static final Codec<HashMap<Holder<Enchantment>, List<Integer>>> ENCHANTMENT_CODEC;
     private static final Codec<HashMap<Holder<MobEffect>, List<Integer>>> POTION_CODEC;
     private static final Codec<Integer> ENCHANTMENT_SLOTS_CODEC;
     private static final Codec<Integer> POTION_SLOTS_CODEC;
     public static final Codec<StoredStaffEffects> CODEC;
+    public static final StreamCodec<RegistryFriendlyByteBuf, StoredStaffEffects> STREAM_CODEC;
     public static final StoredStaffEffects EMPTY = new StoredStaffEffects(new HashMap<>(), new HashMap<>(), 0, 0);
 
     private final HashMap<Holder<Enchantment>, List<Integer>> enchantments;
@@ -71,11 +77,13 @@ public class StoredStaffEffects implements TooltipProvider {
     }
 
     public void setEnchantmentValues(Holder<Enchantment> enchantment, List<Integer> values) {
-        this.enchantments.put(enchantment, values);
+        if (values.equals(List.of(0, 0, 0))) this.enchantments.remove(enchantment);
+        else this.enchantments.put(enchantment, values);
     }
 
     public void setPotionValues(Holder<MobEffect> potion, List<Integer> values) {
-        this.potions.put(potion, values);
+        if (values.equals(List.of(0, 0, 0))) this.potions.remove(potion);
+        else this.potions.put(potion, values);
     }
 
     public void setUsedSlots(boolean isEnchantment, int slots) {
@@ -84,8 +92,10 @@ public class StoredStaffEffects implements TooltipProvider {
     }
 
     static {
-        ENCHANTMENT_CODEC = Codec.unboundedMap(Enchantment.CODEC, Codec.intRange(0, 255).listOf()).xmap(HashMap::new, Function.identity());
-        POTION_CODEC = Codec.unboundedMap(MobEffect.CODEC, Codec.intRange(0, 255).listOf()).xmap(HashMap::new, Function.identity());
+        ENCHANTMENT_VALUES_CODEC = Codec.intRange(0, 255).listOf();
+        POTION_VALUES_CODEC = Codec.intRange(0, 255).listOf();
+        ENCHANTMENT_CODEC = Codec.unboundedMap(Enchantment.CODEC, ENCHANTMENT_VALUES_CODEC).xmap(HashMap::new, Function.identity());
+        POTION_CODEC = Codec.unboundedMap(MobEffect.CODEC, POTION_VALUES_CODEC).xmap(HashMap::new, Function.identity());
         ENCHANTMENT_SLOTS_CODEC = Codec.INT;
         POTION_SLOTS_CODEC = Codec.INT;
 
@@ -96,6 +106,18 @@ public class StoredStaffEffects implements TooltipProvider {
                 ENCHANTMENT_SLOTS_CODEC.fieldOf("enchantment_slots").forGetter(storedStaffEffects -> storedStaffEffects.enchantmentSlots),
                 POTION_SLOTS_CODEC.fieldOf("potion_slots").forGetter(storedStaffEffects -> storedStaffEffects.potionSlots)
             ).apply(instance, StoredStaffEffects::new)
+        );
+
+        STREAM_CODEC = StreamCodec.composite(
+                ByteBufCodecs.map(HashMap::new, Enchantment.STREAM_CODEC, ByteBufCodecs.fromCodec(Codec.intRange(0, 255).listOf())),
+                storedStaffEffects -> storedStaffEffects.enchantments,
+                ByteBufCodecs.map(HashMap::new, MobEffect.STREAM_CODEC, ByteBufCodecs.fromCodec(Codec.intRange(0, 255).listOf())),
+                storedStaffEffects -> storedStaffEffects.potions,
+                ByteBufCodecs.VAR_INT,
+                storedStaffEffects -> storedStaffEffects.enchantmentSlots,
+                ByteBufCodecs.VAR_INT,
+                storedStaffEffects -> storedStaffEffects.potionSlots,
+                StoredStaffEffects::new
         );
     }
 

@@ -3,6 +3,7 @@ package net.andrew_coursin.magical_staffs.crafting;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.andrew_coursin.magical_staffs.components.ModComponents;
+import net.andrew_coursin.magical_staffs.item.ModItems;
 import net.andrew_coursin.magical_staffs.item.custom.StaffItem;
 import net.andrew_coursin.magical_staffs.item.forge_material.ForgeMaterial;
 import net.andrew_coursin.magical_staffs.item.forge_material.ForgeMaterials;
@@ -15,13 +16,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.registries.ForgeRegistries;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 import static net.andrew_coursin.magical_staffs.MagicalStaffs.MOD_ID;
@@ -92,22 +91,17 @@ public class SmithingForgeRecipe implements SmithingRecipe {
 
     @Override
     public ItemStack getResultItem(HolderLookup.Provider provider) {
-        return new ItemStack(Items.NETHERITE_SWORD);
+        return new ItemStack(ModItems.WOODEN_STAFF.get());
     }
 
     @Override
     public RecipeSerializer<?> getSerializer() {
-        return Objects.requireNonNull(ForgeRegistries.RECIPE_SERIALIZERS.getValue(ResourceLocation.fromNamespaceAndPath(MOD_ID, "smithing_forge")));
+        RecipeSerializer<?> serializer = ForgeRegistries.RECIPE_SERIALIZERS.getValue(ResourceLocation.fromNamespaceAndPath(MOD_ID, "smithing_forge"));
+        assert serializer != null;
+        return serializer;
     }
 
     public static class Serializer implements RecipeSerializer<SmithingForgeRecipe> {
-//        public SmithingForgeRecipe fromJson(ResourceLocation resourceLocation, JsonObject jsonObject) {
-//            Ingredient ingredient = Ingredient.fromJson(GsonHelper.getNonNull(jsonObject, "template"));
-//            Ingredient ingredient1 = Ingredient.fromJson(GsonHelper.getNonNull(jsonObject, "base"));
-//            Ingredient ingredient2 = Ingredient.fromJson(GsonHelper.getNonNull(jsonObject, "addition"));
-//            return new SmithingForgeRecipe(resourceLocation, ingredient, ingredient1, ingredient2);
-//        }
-//
         private static SmithingForgeRecipe fromNetwork(RegistryFriendlyByteBuf pBuffer) {
             Ingredient template = Ingredient.CONTENTS_STREAM_CODEC.decode(pBuffer);
             Ingredient base = Ingredient.CONTENTS_STREAM_CODEC.decode(pBuffer);

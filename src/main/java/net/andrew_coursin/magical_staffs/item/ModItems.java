@@ -1,5 +1,7 @@
 package net.andrew_coursin.magical_staffs.item;
 
+import net.andrew_coursin.magical_staffs.components.ModComponents;
+import net.andrew_coursin.magical_staffs.components.StoredStaffEffects;
 import net.andrew_coursin.magical_staffs.item.custom.StaffItem;
 import net.andrew_coursin.magical_staffs.item.forge_material.ForgeMaterials;
 import net.minecraft.ChatFormatting;
@@ -31,17 +33,17 @@ public class ModItems {
 
     public static final RegistryObject<StaffItem> WOODEN_STAFF = ITEMS.register("wooden_staff", () -> new StaffItem(ForgeMaterials.WOOD.activeDuration(), ForgeMaterials.WOOD.cooldownFactor(), ForgeMaterials.WOOD.enchantmentSlots(), ForgeMaterials.WOOD.potionSlots(), new Item.Properties().stacksTo(1)));
 
-    public static final RegistryObject<StaffItem> GOLDEN_STAFF = ITEMS.register("golden_staff", () -> new StaffItem(ForgeMaterials.GOLD.activeDuration(), ForgeMaterials.GOLD.cooldownFactor(), ForgeMaterials.GOLD.enchantmentSlots(), ForgeMaterials.GOLD.potionSlots(), new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<StaffItem> GOLDEN_STAFF = ITEMS.register("golden_staff", () -> new StaffItem(ForgeMaterials.GOLD.activeDuration(), ForgeMaterials.GOLD.cooldownFactor(), ForgeMaterials.GOLD.enchantmentSlots(), ForgeMaterials.GOLD.potionSlots(), new Item.Properties().stacksTo(1).component(ModComponents.STORED_STAFF_EFFECTS.get(), StoredStaffEffects.EMPTY)));
 
-    public static final RegistryObject<StaffItem> AMETHYST_STAFF = ITEMS.register("amethyst_staff", () -> new StaffItem(ForgeMaterials.AMETHYST.activeDuration(), ForgeMaterials.AMETHYST.cooldownFactor(), ForgeMaterials.AMETHYST.enchantmentSlots(), ForgeMaterials.AMETHYST.potionSlots(), new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<StaffItem> AMETHYST_STAFF = ITEMS.register("amethyst_staff", () -> new StaffItem(ForgeMaterials.AMETHYST.activeDuration(), ForgeMaterials.AMETHYST.cooldownFactor(), ForgeMaterials.AMETHYST.enchantmentSlots(), ForgeMaterials.AMETHYST.potionSlots(), new Item.Properties().stacksTo(1).component(ModComponents.STORED_STAFF_EFFECTS.get(), StoredStaffEffects.EMPTY)));
 
-    public static final RegistryObject<StaffItem> IRON_STAFF = ITEMS.register("iron_staff", () -> new StaffItem(ForgeMaterials.IRON.activeDuration(), ForgeMaterials.IRON.cooldownFactor(), ForgeMaterials.IRON.enchantmentSlots(), ForgeMaterials.IRON.potionSlots(), new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<StaffItem> IRON_STAFF = ITEMS.register("iron_staff", () -> new StaffItem(ForgeMaterials.IRON.activeDuration(), ForgeMaterials.IRON.cooldownFactor(), ForgeMaterials.IRON.enchantmentSlots(), ForgeMaterials.IRON.potionSlots(), new Item.Properties().stacksTo(1).component(ModComponents.STORED_STAFF_EFFECTS.get(), StoredStaffEffects.EMPTY)));
 
-    public static final RegistryObject<StaffItem> DIAMOND_STAFF = ITEMS.register("diamond_staff", () -> new StaffItem(ForgeMaterials.DIAMOND.activeDuration(), ForgeMaterials.DIAMOND.cooldownFactor(), ForgeMaterials.DIAMOND.enchantmentSlots(), ForgeMaterials.DIAMOND.potionSlots(), new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<StaffItem> DIAMOND_STAFF = ITEMS.register("diamond_staff", () -> new StaffItem(ForgeMaterials.DIAMOND.activeDuration(), ForgeMaterials.DIAMOND.cooldownFactor(), ForgeMaterials.DIAMOND.enchantmentSlots(), ForgeMaterials.DIAMOND.potionSlots(), new Item.Properties().stacksTo(1).component(ModComponents.STORED_STAFF_EFFECTS.get(), StoredStaffEffects.EMPTY)));
 
-    public static final RegistryObject<StaffItem> BLAZE_STAFF = ITEMS.register("blaze_staff", () -> new StaffItem(ForgeMaterials.BLAZE.activeDuration(), ForgeMaterials.BLAZE.cooldownFactor(), ForgeMaterials.BLAZE.enchantmentSlots(), ForgeMaterials.BLAZE.potionSlots(), new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<StaffItem> BLAZE_STAFF = ITEMS.register("blaze_staff", () -> new StaffItem(ForgeMaterials.BLAZE.activeDuration(), ForgeMaterials.BLAZE.cooldownFactor(), ForgeMaterials.BLAZE.enchantmentSlots(), ForgeMaterials.BLAZE.potionSlots(), new Item.Properties().stacksTo(1).component(ModComponents.STORED_STAFF_EFFECTS.get(), StoredStaffEffects.EMPTY)));
 
-    public static final RegistryObject<StaffItem> NETHERITE_STAFF = ITEMS.register("netherite_staff", () -> new StaffItem(ForgeMaterials.NETHERITE.activeDuration(), ForgeMaterials.NETHERITE.cooldownFactor(), ForgeMaterials.NETHERITE.enchantmentSlots(), ForgeMaterials.NETHERITE.potionSlots(), new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<StaffItem> NETHERITE_STAFF = ITEMS.register("netherite_staff", () -> new StaffItem(ForgeMaterials.NETHERITE.activeDuration(), ForgeMaterials.NETHERITE.cooldownFactor(), ForgeMaterials.NETHERITE.enchantmentSlots(), ForgeMaterials.NETHERITE.potionSlots(), new Item.Properties().stacksTo(1).component(ModComponents.STORED_STAFF_EFFECTS.get(), StoredStaffEffects.EMPTY)));
 
     public static SmithingTemplateItem createForgeUpgradeTemplate() {
         ChatFormatting TITLE_FORMAT = ChatFormatting.GRAY;
