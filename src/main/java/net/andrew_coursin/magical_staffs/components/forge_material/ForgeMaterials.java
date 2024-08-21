@@ -1,4 +1,4 @@
-package net.andrew_coursin.magical_staffs.item.forge_material;
+package net.andrew_coursin.magical_staffs.components.forge_material;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Style;
@@ -10,11 +10,8 @@ import net.minecraftforge.fml.common.Mod;
 import java.util.List;
 import java.util.Optional;
 
-import static net.andrew_coursin.magical_staffs.MagicalStaffs.MOD_ID;
-
 @Mod.EventBusSubscriber
 public class ForgeMaterials {
-    public static String KEY = MOD_ID + ".forge";
     public static final ForgeMaterial NONE = new ForgeMaterial("none", Optional.of(Items.AIR), Optional.empty(), 0, 9, 0, 0, Style.EMPTY);
     public static final ForgeMaterial WOOD = new ForgeMaterial("wood", Optional.empty(), Optional.of(ItemTags.PLANKS), 400, 8, 4, 0, Style.EMPTY.withColor(6697728));
     public static final ForgeMaterial GOLD = new ForgeMaterial("gold", Optional.of(Items.GOLD_INGOT), Optional.empty(), 600, 7, 5, 0, Style.EMPTY.withColor(ChatFormatting.GOLD));

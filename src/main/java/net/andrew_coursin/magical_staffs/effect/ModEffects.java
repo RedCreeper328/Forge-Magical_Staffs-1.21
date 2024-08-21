@@ -33,8 +33,8 @@ public class ModEffects {
 
     public static @Nullable Holder<MobEffect> getAttackEffect(Holder<MobEffect> mobEffect) {
         for (RegistryObject<MobEffect> mobEffectRegistryObject : MOB_EFFECTS.getEntries()) {
-            if (mobEffectRegistryObject.get() instanceof AttackMobEffect attackMobEffect && attackMobEffect.getAppliedEffect() == mobEffect) {
-                return mobEffectRegistryObject.getHolder().get();
+            if (((AttackMobEffect) mobEffectRegistryObject.get()).getAppliedEffect() == mobEffect) {
+                return mobEffectRegistryObject.getHolder().orElse(null);
             }
         }
 

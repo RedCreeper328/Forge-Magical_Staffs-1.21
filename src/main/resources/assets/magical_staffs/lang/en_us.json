@@ -65,11 +65,11 @@
   "message.magical_staffs.infuse.no_effect": "No %s to infuse",
   "message.magical_staffs.infuse.no_item": "No item to infuse",
   "message.magical_staffs.infuse.no_points": "Not enough %s points to infuse (%d needed)",
-  "message.magical_staffs.infuse.null": "Could not find %s",
   "message.magical_staffs.infuse.prepare": "Staff: %1$s %2$s (%3$d points) (%4$d slots) Item: %1$s %5$s",
   "message.magical_staffs.mode_selected": "%s Mode Selected",
   "message.magical_staffs.no_choices": "No choice selected. Use arrow keys to cycle choices.",
   "message.magical_staffs.no_experience": "Not enough experience levels (%d needed)",
+  "message.magical_staffs.null": "Could not find %s",
   "message.magical_staffs.on_cool_down": "Staff Is On Cool Down (%s)",
 
   "potion.potency.6": "VII",

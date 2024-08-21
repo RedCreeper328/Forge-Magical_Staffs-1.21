@@ -1,6 +1,6 @@
 //package net.andrew_coursin.magical_staffs.capability.timed_enchantment;
 //
-//import net.andrew_coursin.magical_staffs.TimedEnchantment;
+//import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantment;
 //import net.andrew_coursin.magical_staffs.event.TimedEnchantmentEndEvent;
 //import net.minecraft.MethodsReturnNonnullByDefault;
 //import net.minecraft.core.HolderLookup;

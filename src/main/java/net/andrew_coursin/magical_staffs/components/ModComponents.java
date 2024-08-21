@@ -1,6 +1,8 @@
 package net.andrew_coursin.magical_staffs.components;
 
-import net.andrew_coursin.magical_staffs.item.forge_material.ForgeMaterial;
+import net.andrew_coursin.magical_staffs.components.forge_material.ForgeMaterial;
+import net.andrew_coursin.magical_staffs.components.stored_staff_effects.StoredStaffEffects;
+import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantments;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -16,9 +18,9 @@ public class ModComponents {
 
     public static final RegistryObject<DataComponentType<ForgeMaterial>> FORGE_MATERIAL = register("forge_material", builder -> builder.persistent(ForgeMaterial.CODEC));
 
-    public static final RegistryObject<DataComponentType<StoredStaffEffects>> STORED_STAFF_EFFECTS = register("stored_staff_effects", builder -> builder.persistent(StoredStaffEffects.CODEC));
+    public static final RegistryObject<DataComponentType<StoredStaffEffects>> STORED_STAFF_EFFECTS = register("stored_staff_effects", builder -> builder.persistent(StoredStaffEffects.CODEC).networkSynchronized(StoredStaffEffects.STREAM_CODEC));
 
-    public static final RegistryObject<DataComponentType<TimedEnchantments>> TIMED_ENCHANTMENTS = register("timed_enchantments", builder -> builder.persistent(TimedEnchantments.CODEC));
+    public static final RegistryObject<DataComponentType<TimedEnchantments>> TIMED_ENCHANTMENTS = register("timed_enchantments", builder -> builder.persistent(TimedEnchantments.CODEC).networkSynchronized(TimedEnchantments.STREAM_CODEC));
 
     public static void register(IEventBus eventBus) {
         MOD_COMPONENTS.register(eventBus);

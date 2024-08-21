@@ -1,11 +1,14 @@
-package net.andrew_coursin.magical_staffs;
+package net.andrew_coursin.magical_staffs.components.timed_enchantments;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.andrew_coursin.magical_staffs.MagicalStaffs;
 import net.andrew_coursin.magical_staffs.level.TimedEnchantmentSavedData;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Holder;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraftforge.fml.common.Mod;
 
@@ -22,6 +25,7 @@ public class TimedEnchantment {
     private static int MAX_ID = 0;
     public static final TimedEnchantmentSavedData TIMED_ENCHANTMENT_SAVED_DATA = new TimedEnchantmentSavedData();
     public static final Codec<TimedEnchantment> CODEC;
+    public static final StreamCodec<RegistryFriendlyByteBuf, TimedEnchantment> STREAM_CODEC;
 
     public TimedEnchantment(Holder<Enchantment> pEnchantment, int pDuration, int pLevel) {
         this.duration = pDuration;
@@ -37,15 +41,6 @@ public class TimedEnchantment {
         this.level = pLevel;
         this.id = pId;
         MAX_ID = Math.max(MAX_ID, pId);
-    }
-
-    public CompoundTag save() {
-        CompoundTag compoundTag = new CompoundTag();
-        compoundTag.putInt("duration", this.duration);
-        compoundTag.putString("enchantment", this.enchantment.getRegisteredName());
-        compoundTag.putInt("lvl", this.level);
-        compoundTag.putInt("id", this.id);
-        return compoundTag;
     }
 
     public Holder<Enchantment> getEnchantment() {
@@ -72,6 +67,18 @@ public class TimedEnchantment {
                 Codec.intRange(0, 255).fieldOf("level").forGetter(timedEnchantment -> timedEnchantment.level),
                 Codec.INT.fieldOf("id").forGetter(timedEnchantment -> timedEnchantment.id)
             ).apply(instance, TimedEnchantment::new)
+        );
+
+        STREAM_CODEC = StreamCodec.composite(
+                Enchantment.STREAM_CODEC,
+                timedEnchantment -> timedEnchantment.enchantment,
+                ByteBufCodecs.VAR_INT,
+                timedEnchantment -> timedEnchantment.duration,
+                ByteBufCodecs.VAR_INT,
+                timedEnchantment -> timedEnchantment.level,
+                ByteBufCodecs.VAR_INT,
+                timedEnchantment -> timedEnchantment.id,
+                TimedEnchantment::new
         );
     }
 }

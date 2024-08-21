@@ -1,25 +1,20 @@
-package net.andrew_coursin.magical_staffs.components;
+package net.andrew_coursin.magical_staffs.components.stored_staff_effects;
 
+import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.Holder;
 import net.minecraft.network.RegistryFriendlyByteBuf;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.effect.MobEffect;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.TooltipFlag;
-import net.minecraft.world.item.component.TooltipProvider;
 import net.minecraft.world.item.enchantment.Enchantment;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class StoredStaffEffects implements TooltipProvider {
+public class StoredStaffEffects {
     public enum Indices {LEVEL, POINTS, SLOTS}
 
     private static final Codec<List<Integer>> ENCHANTMENT_VALUES_CODEC;
@@ -32,12 +27,12 @@ public class StoredStaffEffects implements TooltipProvider {
     public static final StreamCodec<RegistryFriendlyByteBuf, StoredStaffEffects> STREAM_CODEC;
     public static final StoredStaffEffects EMPTY = new StoredStaffEffects(new HashMap<>(), new HashMap<>(), 0, 0);
 
-    private final HashMap<Holder<Enchantment>, List<Integer>> enchantments;
-    private final HashMap<Holder<MobEffect>, List<Integer>> potions;
-    private int enchantmentSlots;
-    private int potionSlots;
+    protected HashMap<Holder<Enchantment>, List<Integer>> enchantments;
+    protected HashMap<Holder<MobEffect>, List<Integer>> potions;
+    protected int enchantmentSlots;
+    protected int potionSlots;
 
-    StoredStaffEffects(HashMap<Holder<Enchantment>, List<Integer>> enchantments, HashMap<Holder<MobEffect>, List<Integer>> potions, int enchantmentSlots, int potionSlots) {
+    private StoredStaffEffects(HashMap<Holder<Enchantment>, List<Integer>> enchantments, HashMap<Holder<MobEffect>, List<Integer>> potions, int enchantmentSlots, int potionSlots) {
         this.enchantments = enchantments;
         this.potions = potions;
         this.enchantmentSlots = enchantmentSlots;
@@ -56,15 +51,16 @@ public class StoredStaffEffects implements TooltipProvider {
         return this.potions.keySet().stream().toList().get(index);
     }
 
-    public int getValue(boolean isEnchantment, Holder<?> effect, Indices index) {
-        if (isEnchantment && effect.get() instanceof Enchantment && enchantments.containsKey(effect)){
-            return enchantments.get(effect).get(index.ordinal());
+    public int getValue(Either<Holder<Enchantment>, Holder<MobEffect>> effect, Indices index) {
+        if (effect.left().isPresent()){
+            return enchantments.getOrDefault(effect.left().get(), List.of(0, 0, 0)).get(index.ordinal());
         }
 
-        if (!isEnchantment && effect.get() instanceof MobEffect && potions.containsKey(effect)) {
-            return potions.get(effect).get(index.ordinal());
+        if (effect.right().isPresent()) {
+            return potions.getOrDefault(effect.right().get(), List.of(0, 0, 0)).get(index.ordinal());
         }
 
+        // Default value
         return 0;
     }
 
@@ -76,20 +72,6 @@ public class StoredStaffEffects implements TooltipProvider {
        return isEnchantment ? this.enchantments.size() : this.potions.size();
     }
 
-    public void setEnchantmentValues(Holder<Enchantment> enchantment, List<Integer> values) {
-        if (values.equals(List.of(0, 0, 0))) this.enchantments.remove(enchantment);
-        else this.enchantments.put(enchantment, values);
-    }
-
-    public void setPotionValues(Holder<MobEffect> potion, List<Integer> values) {
-        if (values.equals(List.of(0, 0, 0))) this.potions.remove(potion);
-        else this.potions.put(potion, values);
-    }
-
-    public void setUsedSlots(boolean isEnchantment, int slots) {
-        if (isEnchantment) this.enchantmentSlots = slots;
-        else this.potionSlots = slots;
-    }
 
     static {
         ENCHANTMENT_VALUES_CODEC = Codec.intRange(0, 255).listOf();
@@ -122,7 +104,46 @@ public class StoredStaffEffects implements TooltipProvider {
     }
 
     @Override
-    public void addToTooltip(Item.@NotNull TooltipContext tooltipContext, @NotNull Consumer<Component> consumer, @NotNull TooltipFlag tooltipFlag) {
+    public boolean equals(Object pOther) {
+        if (this == pOther) {
+            return true;
+        } else {
+            return pOther instanceof StoredStaffEffects storedStaffEffects
+                    && this.enchantments.equals(storedStaffEffects.enchantments)
+                    && this.enchantmentSlots == storedStaffEffects.enchantmentSlots
+                    && this.potions.equals(storedStaffEffects.potions)
+                    && this.potionSlots == storedStaffEffects.potionSlots;
+        }
+    }
 
+    @Override
+    public int hashCode() {
+        int i = this.enchantments.hashCode();
+        i = 31 * i + this.potions.hashCode();
+        return i;
+    }
+
+    public static class Mutable extends StoredStaffEffects{
+        public Mutable(StoredStaffEffects storedStaffEffects) {
+            super(new HashMap<>(), new HashMap<>(), storedStaffEffects.enchantmentSlots, storedStaffEffects.potionSlots);
+            this.enchantments.putAll(storedStaffEffects.enchantments);
+            this.potions.putAll(storedStaffEffects.potions);
+        }
+
+        public void setEnchantmentValues(Holder<Enchantment> enchantment, List<Integer> values) {
+            this.enchantmentSlots += values.get(Indices.SLOTS.ordinal()) - getValue(Either.left(enchantment), Indices.SLOTS);
+            if (values.equals(List.of(0, 0, 0))) this.enchantments.remove(enchantment);
+            else this.enchantments.put(enchantment, values);
+        }
+
+        public void setPotionValues(Holder<MobEffect> potion, List<Integer> values) {
+            this.potionSlots += values.get(Indices.SLOTS.ordinal()) - getValue(Either.right(potion), Indices.SLOTS);
+            if (values.equals(List.of(0, 0, 0))) this.potions.remove(potion);
+            else this.potions.put(potion, values);
+        }
+
+        public StoredStaffEffects toImmutable() {
+            return new StoredStaffEffects(this.enchantments, this.potions, this.enchantmentSlots, this.potionSlots);
+        }
     }
 }

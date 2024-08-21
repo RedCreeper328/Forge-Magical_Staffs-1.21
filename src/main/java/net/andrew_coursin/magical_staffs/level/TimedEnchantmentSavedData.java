@@ -1,6 +1,6 @@
 package net.andrew_coursin.magical_staffs.level;
 
-import net.andrew_coursin.magical_staffs.TimedEnchantment;
+import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantment;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -10,10 +10,7 @@ import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -47,10 +44,10 @@ public class TimedEnchantmentSavedData extends SavedData {
             if (duration - 1 > 0) {
                 this.idsToDurations.put(id, duration - 1);
             } else {
-                this.idsToDurations.remove(id);
                 removedIds.add(id);
             }
         });
+        removedIds.forEach(this.idsToDurations::remove);
         this.setDirty();
         return removedIds;
     }

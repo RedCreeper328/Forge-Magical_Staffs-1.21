@@ -2,15 +2,25 @@ package net.andrew_coursin.magical_staffs.event;
 
 import net.andrew_coursin.magical_staffs.MagicalStaffs;
 import net.andrew_coursin.magical_staffs.capability.attack_effects.AttackEffectsCapabilityProvider;
+import net.andrew_coursin.magical_staffs.components.ModComponents;
+import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantments;
 import net.andrew_coursin.magical_staffs.effect.AttackMobEffect;
 import net.andrew_coursin.magical_staffs.inventory.StaffItemListener;
-import net.andrew_coursin.magical_staffs.TimedEnchantment;
+import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantment;
 import net.andrew_coursin.magical_staffs.level.TimedEnchantmentSavedData;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.StringUtil;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.TickEvent;
@@ -42,21 +52,17 @@ public class ModEvents {
 
     @SubscribeEvent
     public static void addTimedEnchantmentsTooltips(final ItemTooltipEvent event) {
-//        event.getItemStack().getCapability(TimedEnchantmentsCapabilityProvider.TIMED_ENCHANTMENTS).ifPresent(timedEnchantments -> {
-//            Player player = event.getEntity();
-//            if (player == null || timedEnchantments.getTimedEnchantments().isEmpty()) return;
-//
-//            // On the server side player.containerMenu is set to inventoryMenu instead of CreativeModeInventoryScreen.ItemPickerMenu
-//            AbstractContainerMenu abstractContainerMenu = player.containerMenu instanceof CreativeModeInventoryScreen.ItemPickerMenu ? player.inventoryMenu : player.containerMenu;
-//            ModPacketHandler.sendToServer(new AddTimedEnchantmentsTooltipsC2SPacket(abstractContainerMenu.getItems().indexOf(event.getItemStack())));
-//
-//            for (TimedEnchantment timedEnchantment : timedEnchantments.getTimedEnchantments()) {
-//                if (timedEnchantment == null) continue;
-//                Enchantment enchantment = timedEnchantment.getEnchantment();
-//                int index = event.getToolTip().lastIndexOf(enchantment.getFullname(EnchantmentHelper.getTagEnchantmentLevel(enchantment, event.getItemStack())));
-//                if (index != -1) event.getToolTip().add(index, (((MutableComponent) enchantment.getFullname(timedEnchantment.getLevel())).append(Component.translatable("tooltip.magical_staffs.duration", StringUtil.formatTickDuration(timedEnchantments.getDisplayDuration(timedEnchantment.getId())))).withStyle(ChatFormatting.DARK_PURPLE)));
-//            }
-//        });
+        TimedEnchantments timedEnchantments = event.getItemStack().get(ModComponents.TIMED_ENCHANTMENTS.get());
+
+        if (timedEnchantments != null && event.getEntity() != null) {
+            Item.TooltipContext tooltipContext = Item.TooltipContext.of(event.getEntity().level());
+
+            timedEnchantments.forEach(timedEnchantment -> {
+                Holder<Enchantment> enchantment = timedEnchantment.getEnchantment();
+                int index = event.getToolTip().lastIndexOf(Enchantment.getFullname(enchantment, EnchantmentHelper.getItemEnchantmentLevel(enchantment, event.getItemStack())));
+                event.getToolTip().add(index + 1, (((MutableComponent) Enchantment.getFullname(enchantment, timedEnchantment.getLevel())).append(Component.translatable("tooltip.magical_staffs.duration", StringUtil.formatTickDuration(timedEnchantment.getDuration(), tooltipContext.tickRate()))).withStyle(ChatFormatting.DARK_PURPLE)));
+            });
+        }
     }
 
     @SubscribeEvent
@@ -99,7 +105,7 @@ public class ModEvents {
             return;
         }
 
-        if (event.getEffectInstance().getEffect().get() instanceof AttackMobEffect attackMobEffect) {
+        if (event.getEffectInstance() != null && event.getEffectInstance().getEffect().get() instanceof AttackMobEffect attackMobEffect) {
             event.getEntity().getCapability(AttackEffectsCapabilityProvider.ATTACK_EFFECTS).ifPresent(
                 attackEffects -> attackEffects.removeEffect(attackMobEffect.getAppliedEffect().get())
             );

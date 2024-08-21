@@ -1,4 +1,4 @@
-package net.andrew_coursin.magical_staffs.item.forge_material;
+package net.andrew_coursin.magical_staffs.components.forge_material;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;

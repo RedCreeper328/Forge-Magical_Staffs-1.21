@@ -5,8 +5,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.andrew_coursin.magical_staffs.components.ModComponents;
 import net.andrew_coursin.magical_staffs.item.ModItems;
 import net.andrew_coursin.magical_staffs.item.custom.StaffItem;
-import net.andrew_coursin.magical_staffs.item.forge_material.ForgeMaterial;
-import net.andrew_coursin.magical_staffs.item.forge_material.ForgeMaterials;
+import net.andrew_coursin.magical_staffs.components.forge_material.ForgeMaterial;
+import net.andrew_coursin.magical_staffs.components.forge_material.ForgeMaterials;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.Util;
 import net.minecraft.core.HolderLookup;
@@ -70,23 +70,17 @@ public class SmithingForgeRecipe implements SmithingRecipe {
     @Override
     public ItemStack assemble(SmithingRecipeInput smithingRecipeInput, HolderLookup.Provider provider) {
         ItemStack baseItemStack = smithingRecipeInput.base();
+        ItemStack materialItemStack = smithingRecipeInput.addition();
+        ItemStack resultItemStack = baseItemStack.copy();
 
-        if (this.base.test(baseItemStack)) {
-            ItemStack materialItemStack = smithingRecipeInput.addition();
-
-            if (this.addition.test(materialItemStack)) {
-                ItemStack resultItemStack = baseItemStack.copy();
-
-                if (resultItemStack.getItem() instanceof StaffItem staffItem && staffItem.canForge(resultItemStack)) {
-                    ForgeMaterial forgeMaterial = ForgeMaterials.getForgeMaterialFromIngredient(materialItemStack);
-                    resultItemStack.set(DataComponents.CUSTOM_NAME, Component.translatable("forge_material.magical_staffs.hover_name", Component.translatable(Util.makeDescriptionId("forge_material", ResourceLocation.fromNamespaceAndPath(MOD_ID, forgeMaterial.name()))), Component.translatable(resultItemStack.getDescriptionId())).withStyle(forgeMaterial.style()));
-                    resultItemStack.set(ModComponents.FORGE_MATERIAL.get(), forgeMaterial);
-                    return resultItemStack;
-                }
-            }
+        if (!this.base.test(baseItemStack) || !this.addition.test(materialItemStack) || !(resultItemStack.getItem() instanceof StaffItem staffItem)) {
+            return ItemStack.EMPTY;
         }
 
-        return ItemStack.EMPTY;
+        ForgeMaterial forgeMaterial = ForgeMaterials.getForgeMaterialFromIngredient(materialItemStack);
+        resultItemStack.set(DataComponents.CUSTOM_NAME, Component.translatable("forge_material.magical_staffs.hover_name", Component.translatable(Util.makeDescriptionId("forge_material", ResourceLocation.fromNamespaceAndPath(MOD_ID, forgeMaterial.name()))), Component.translatable(resultItemStack.getDescriptionId())).withStyle(forgeMaterial.style()));
+        resultItemStack.set(ModComponents.FORGE_MATERIAL.get(), forgeMaterial);
+        return staffItem.canForge(resultItemStack) ? resultItemStack : ItemStack.EMPTY;
     }
 
     @Override
