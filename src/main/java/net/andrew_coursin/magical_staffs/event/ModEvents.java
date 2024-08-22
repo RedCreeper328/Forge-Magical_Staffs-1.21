@@ -6,7 +6,6 @@ import net.andrew_coursin.magical_staffs.components.ModComponents;
 import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantments;
 import net.andrew_coursin.magical_staffs.effect.AttackMobEffect;
 import net.andrew_coursin.magical_staffs.inventory.StaffItemListener;
-import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantment;
 import net.andrew_coursin.magical_staffs.level.TimedEnchantmentSavedData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
@@ -115,7 +114,7 @@ public class ModEvents {
     @SubscribeEvent
     public static void timedEnchantmentTickDownDuration(final TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.START) {
-            List<Integer> removedIds = TimedEnchantment.TIMED_ENCHANTMENT_SAVED_DATA.updateDurations();
+            List<Integer> removedIds = TimedEnchantmentSavedData.get(event.getServer().overworld()).updateDurations();
 
             if (removedIds.isEmpty()) return;
 

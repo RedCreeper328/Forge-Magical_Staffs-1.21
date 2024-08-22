@@ -20,6 +20,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.StringUtil;
@@ -290,10 +291,8 @@ public class StaffItem extends Item {
         reset(true);
     }
 
-    private void imbue(ItemStack staffItemStack, Player player) {
+    private void imbue(ItemStack staffItemStack, ServerLevel serverLevel, Player player) {
         StoredStaffEffects storedStaffEffects = getStoredEffects(staffItemStack);
-//        ListTag staffEnchantments = staffItemStack.getOrCreateTag().getList(ENCHANTMENT_KEY, 10);
-//        ListTag staffPotions = staffItemStack.getOrCreateTag().getList(POTION_KEY, 10);
 
         // Cannot imbue with no enchantments and no potions
         if (storedStaffEffects.isEmpty(true) && storedStaffEffects.isEmpty(false)) {
@@ -310,7 +309,7 @@ public class StaffItem extends Item {
         }
 
         // Apply the imbue effects to the player
-        imbueEnchantments(staffItemStack, player);
+        imbueEnchantments(staffItemStack, serverLevel, player);
         imbuePotions(staffItemStack, player);
         player.giveExperienceLevels(-1 * experienceCost);
         player.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
@@ -328,13 +327,13 @@ public class StaffItem extends Item {
 //        }
     }
 
-    private void imbueEnchantments(ItemStack staffItemStack, Player player) {
+    private void imbueEnchantments(ItemStack staffItemStack, ServerLevel serverLevel, Player player) {
         StoredStaffEffects storedStaffEffects = getStoredEffects(staffItemStack);
 
         for (int i = 0; i < storedStaffEffects.size(true); i++) {
             Holder<Enchantment> enchantment = storedStaffEffects.getEnchantment(i);
             int addLevel = storedStaffEffects.getValue(Either.left(enchantment), StoredStaffEffects.Indices.LEVEL);
-            TimedEnchantment timedEnchantment = new TimedEnchantment(enchantment, getActiveDuration(staffItemStack), addLevel);
+            TimedEnchantment timedEnchantment = new TimedEnchantment(enchantment, getActiveDuration(staffItemStack), addLevel, serverLevel);
 
             for (ItemStack otherItemStack : player.containerMenu.getItems()) {
                 if (!enchantment.get().canEnchant(otherItemStack)) continue;
@@ -702,7 +701,7 @@ public class StaffItem extends Item {
             case INFUSE -> {
                 if (pUsedHand == InteractionHand.MAIN_HAND) completeInfuse(pPlayer);
             }
-            case IMBUE -> imbue(itemStack, pPlayer);
+            case IMBUE -> imbue(itemStack, (ServerLevel) pLevel, pPlayer);
         }
 
         pPlayer.startUsingItem(pUsedHand);

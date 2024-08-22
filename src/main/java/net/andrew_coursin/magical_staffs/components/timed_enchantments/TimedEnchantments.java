@@ -2,9 +2,12 @@ package net.andrew_coursin.magical_staffs.components.timed_enchantments;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.andrew_coursin.magical_staffs.event.TimedEnchantmentEndEvent;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
@@ -22,14 +25,16 @@ public class TimedEnchantments {
 
     TimedEnchantments(List<TimedEnchantment> timedEnchantments) {
         this.timedEnchantments = timedEnchantments;
+        MinecraftForge.EVENT_BUS.register(this);
     }
 
     public void add(TimedEnchantment timedEnchantment) {
         this.timedEnchantments.add(timedEnchantment);
     }
 
-    public void remove(TimedEnchantment timedEnchantment) {
-        this.timedEnchantments.remove(timedEnchantment);
+    @SubscribeEvent
+    public void remove(TimedEnchantmentEndEvent event) {
+        this.timedEnchantments.removeIf(timedEnchantment -> timedEnchantment.getId() == event.getId());
     }
 
     static {

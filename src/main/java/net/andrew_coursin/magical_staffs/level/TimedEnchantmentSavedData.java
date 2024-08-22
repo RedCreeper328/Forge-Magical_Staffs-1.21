@@ -6,7 +6,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.util.datafix.DataFixTypes;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -19,7 +19,11 @@ public class TimedEnchantmentSavedData extends SavedData {
     public static final String ID = "timed_enchantment";
 
     public static SavedData.Factory<TimedEnchantmentSavedData> factory() {
-        return new SavedData.Factory<>(TimedEnchantmentSavedData::new, TimedEnchantmentSavedData::load, DataFixTypes.SAVED_DATA_MAP_INDEX);
+        return new SavedData.Factory<>(TimedEnchantmentSavedData::new, TimedEnchantmentSavedData::load, null);
+    }
+
+    public static TimedEnchantmentSavedData get(ServerLevel serverLevel) {
+        return serverLevel.getDataStorage().computeIfAbsent(TimedEnchantmentSavedData.factory(), TimedEnchantmentSavedData.ID);
     }
 
     public TimedEnchantmentSavedData() {}

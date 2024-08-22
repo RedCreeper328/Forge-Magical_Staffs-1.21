@@ -2,37 +2,34 @@ package net.andrew_coursin.magical_staffs.components.timed_enchantments;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.andrew_coursin.magical_staffs.MagicalStaffs;
 import net.andrew_coursin.magical_staffs.level.TimedEnchantmentSavedData;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Holder;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraftforge.fml.common.Mod;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-@Mod.EventBusSubscriber(modid = MagicalStaffs.MOD_ID)
 public class TimedEnchantment {
     private final Holder<Enchantment> enchantment;
     private final int duration;
     private final int id;
     private final int level;
     private static int MAX_ID = 0;
-    public static final TimedEnchantmentSavedData TIMED_ENCHANTMENT_SAVED_DATA = new TimedEnchantmentSavedData();
     public static final Codec<TimedEnchantment> CODEC;
     public static final StreamCodec<RegistryFriendlyByteBuf, TimedEnchantment> STREAM_CODEC;
 
-    public TimedEnchantment(Holder<Enchantment> pEnchantment, int pDuration, int pLevel) {
+    public TimedEnchantment(Holder<Enchantment> pEnchantment, int pDuration, int pLevel, ServerLevel serverLevel) {
         this.duration = pDuration;
         this.enchantment = pEnchantment;
         this.level = pLevel;
         this.id = MAX_ID++;
-        TIMED_ENCHANTMENT_SAVED_DATA.add(this);
+        TimedEnchantmentSavedData.get(serverLevel).add(this);
     }
 
     private TimedEnchantment(Holder<Enchantment> pEnchantment, int pDuration, int pLevel, int pId) {
