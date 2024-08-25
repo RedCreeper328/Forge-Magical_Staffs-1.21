@@ -2,14 +2,16 @@ package net.andrew_coursin.magical_staffs.components.timed_enchantments;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.andrew_coursin.magical_staffs.level.TimedEnchantmentSavedData;
+import net.andrew_coursin.magical_staffs.event.TimedEnchantmentEndEvent;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.Holder;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -17,19 +19,15 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class TimedEnchantment {
     private final Holder<Enchantment> enchantment;
-    private final int duration;
+    private int duration;
     private final int id;
     private final int level;
     private static int MAX_ID = 0;
     public static final Codec<TimedEnchantment> CODEC;
     public static final StreamCodec<RegistryFriendlyByteBuf, TimedEnchantment> STREAM_CODEC;
 
-    public TimedEnchantment(Holder<Enchantment> pEnchantment, int pDuration, int pLevel, ServerLevel serverLevel) {
-        this.duration = pDuration;
-        this.enchantment = pEnchantment;
-        this.level = pLevel;
-        this.id = MAX_ID++;
-        TimedEnchantmentSavedData.get(serverLevel).add(this);
+    public TimedEnchantment(Holder<Enchantment> pEnchantment, int pDuration, int pLevel) {
+        this(pEnchantment, pDuration, pLevel, ++MAX_ID);
     }
 
     private TimedEnchantment(Holder<Enchantment> pEnchantment, int pDuration, int pLevel, int pId) {
@@ -38,6 +36,7 @@ public class TimedEnchantment {
         this.level = pLevel;
         this.id = pId;
         MAX_ID = Math.max(MAX_ID, pId);
+        MinecraftForge.EVENT_BUS.register(this);
     }
 
     public Holder<Enchantment> getEnchantment() {
@@ -54,6 +53,27 @@ public class TimedEnchantment {
 
     public int getLevel() {
         return this.level;
+    }
+
+    @Override
+    public boolean equals(Object pOther) {
+        if (this == pOther) {
+            return true;
+        } else {
+            return pOther instanceof TimedEnchantment timedEnchantment && this.id == timedEnchantment.id;
+        }
+    }
+
+    @SubscribeEvent
+    public void tick(TickEvent.ServerTickEvent event) {
+        if (event.phase == TickEvent.Phase.END) return;
+
+        this.duration--;
+
+        if (this.duration > 0) return;
+
+        MinecraftForge.EVENT_BUS.post(new TimedEnchantmentEndEvent(this.id));
+        MinecraftForge.EVENT_BUS.unregister(this);
     }
 
     static {

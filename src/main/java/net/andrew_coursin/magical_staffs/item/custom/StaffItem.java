@@ -8,6 +8,7 @@ import net.andrew_coursin.magical_staffs.effect.ModEffects;
 import net.andrew_coursin.magical_staffs.components.forge_material.ForgeMaterial;
 import net.andrew_coursin.magical_staffs.components.forge_material.ForgeMaterials;
 import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantment;
+import net.andrew_coursin.magical_staffs.item.TimedItemStack;
 import net.andrew_coursin.magical_staffs.networking.ModPacketHandler;
 import net.andrew_coursin.magical_staffs.networking.packet.StaffItemKeyBindC2SPacket;
 import net.andrew_coursin.magical_staffs.util.ModKeyBindings;
@@ -20,7 +21,6 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.StringUtil;
@@ -89,22 +89,22 @@ public class StaffItem extends Item {
 
     private int getActiveDuration(ItemStack staffItemStack) {
         ForgeMaterial forgeMaterial = getForgeMaterial(staffItemStack);
-
-        if (forgeMaterial.activeDuration() == Integer.MIN_VALUE) {
-            return this.activeDuration;
-        } else {
-            return (this.activeDuration + forgeMaterial.activeDuration()) / 2;
-        }
+//
+//        if (forgeMaterial.activeDuration() == Integer.MIN_VALUE) {
+//            return this.activeDuration;
+//        } else {
+        return (this.activeDuration + forgeMaterial.activeDuration()) / 2;
+//        }
     }
 
     private int getCooldownDuration(ItemStack staffItemStack) {
         ForgeMaterial forgeMaterial = getForgeMaterial(staffItemStack);
 
-        if (forgeMaterial.cooldownFactor() == Integer.MIN_VALUE) {
-            return getActiveDuration(staffItemStack) / (1 + 1 / this.coolDownFactor);
-        } else {
-            return getActiveDuration(staffItemStack) * (1 + 2 / (this.coolDownFactor + forgeMaterial.cooldownFactor()));
-        }
+//        if (forgeMaterial.cooldownFactor() == Integer.MIN_VALUE) {
+//            return getActiveDuration(staffItemStack) / (1 + 1 / this.coolDownFactor);
+//        } else {
+        return getActiveDuration(staffItemStack) + getActiveDuration(staffItemStack) * 2 / (this.coolDownFactor + forgeMaterial.cooldownFactor());
+//        }
     }
 
     private int getMaxSlots(boolean isEnchantment, ItemStack staffItemStack) {
@@ -291,7 +291,7 @@ public class StaffItem extends Item {
         reset(true);
     }
 
-    private void imbue(ItemStack staffItemStack, ServerLevel serverLevel, Player player) {
+    private void imbue(ItemStack staffItemStack, Player player) {
         StoredStaffEffects storedStaffEffects = getStoredEffects(staffItemStack);
 
         // Cannot imbue with no enchantments and no potions
@@ -309,7 +309,7 @@ public class StaffItem extends Item {
         }
 
         // Apply the imbue effects to the player
-        imbueEnchantments(staffItemStack, serverLevel, player);
+        imbueEnchantments(staffItemStack, player);
         imbuePotions(staffItemStack, player);
         player.giveExperienceLevels(-1 * experienceCost);
         player.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
@@ -327,21 +327,23 @@ public class StaffItem extends Item {
 //        }
     }
 
-    private void imbueEnchantments(ItemStack staffItemStack, ServerLevel serverLevel, Player player) {
+    private void imbueEnchantments(ItemStack staffItemStack, Player player) {
         StoredStaffEffects storedStaffEffects = getStoredEffects(staffItemStack);
 
         for (int i = 0; i < storedStaffEffects.size(true); i++) {
             Holder<Enchantment> enchantment = storedStaffEffects.getEnchantment(i);
             int addLevel = storedStaffEffects.getValue(Either.left(enchantment), StoredStaffEffects.Indices.LEVEL);
-            TimedEnchantment timedEnchantment = new TimedEnchantment(enchantment, getActiveDuration(staffItemStack), addLevel, serverLevel);
+            TimedEnchantment timedEnchantment = new TimedEnchantment(enchantment, getActiveDuration(staffItemStack), addLevel);
 
-            for (ItemStack otherItemStack : player.containerMenu.getItems()) {
+            for (int j = 0; j < player.containerMenu.slots.size(); j++) {
+                ItemStack otherItemStack = player.containerMenu.slots.get(j).getItem();
                 if (!enchantment.get().canEnchant(otherItemStack)) continue;
                 int newLevel = EnchantmentHelper.getItemEnchantmentLevel(enchantment, otherItemStack) + addLevel;
-                otherItemStack.enchant(enchantment, newLevel);
-                TimedEnchantments timedEnchantments = otherItemStack.getOrDefault(ModComponents.TIMED_ENCHANTMENTS.get(), TimedEnchantments.EMPTY);
-                timedEnchantments.add(timedEnchantment);
-                otherItemStack.set(ModComponents.TIMED_ENCHANTMENTS.get(), timedEnchantments);
+                TimedItemStack timedItemStack = new TimedItemStack(otherItemStack);
+                timedItemStack.enchant(enchantment, newLevel);
+                TimedEnchantments timedEnchantments = timedItemStack.getOrDefault(ModComponents.TIMED_ENCHANTMENTS.get(), TimedEnchantments.EMPTY);
+                timedItemStack.set(ModComponents.TIMED_ENCHANTMENTS.get(), timedEnchantments.add(timedEnchantment));
+                player.containerMenu.setItem(j, player.containerMenu.getStateId(), timedItemStack);
             }
         }
     }
@@ -701,7 +703,7 @@ public class StaffItem extends Item {
             case INFUSE -> {
                 if (pUsedHand == InteractionHand.MAIN_HAND) completeInfuse(pPlayer);
             }
-            case IMBUE -> imbue(itemStack, (ServerLevel) pLevel, pPlayer);
+            case IMBUE -> imbue(itemStack, pPlayer);
         }
 
         pPlayer.startUsingItem(pUsedHand);

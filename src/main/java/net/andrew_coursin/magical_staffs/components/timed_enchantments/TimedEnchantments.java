@@ -2,19 +2,19 @@ package net.andrew_coursin.magical_staffs.components.timed_enchantments;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.andrew_coursin.magical_staffs.event.TimedEnchantmentEndEvent;
+import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 
+import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+@MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class TimedEnchantments {
     public static final TimedEnchantments EMPTY = new TimedEnchantments(new ArrayList<>());
@@ -23,18 +23,30 @@ public class TimedEnchantments {
     private static final Codec<List<TimedEnchantment>> LIST_CODEC;
     private final List<TimedEnchantment> timedEnchantments;
 
-    TimedEnchantments(List<TimedEnchantment> timedEnchantments) {
+    private TimedEnchantments(List<TimedEnchantment> timedEnchantments) {
         this.timedEnchantments = timedEnchantments;
-        MinecraftForge.EVENT_BUS.register(this);
     }
 
-    public void add(TimedEnchantment timedEnchantment) {
-        this.timedEnchantments.add(timedEnchantment);
+    public TimedEnchantments add(TimedEnchantment timedEnchantment) {
+        TimedEnchantments newTimedEnchantments = new TimedEnchantments(new ArrayList<>());
+        newTimedEnchantments.timedEnchantments.add(timedEnchantment);
+        return newTimedEnchantments;
     }
 
-    @SubscribeEvent
-    public void remove(TimedEnchantmentEndEvent event) {
-        this.timedEnchantments.removeIf(timedEnchantment -> timedEnchantment.getId() == event.getId());
+    public boolean isEmpty() {
+        return this.timedEnchantments.isEmpty();
+    }
+
+    @Nullable
+    public TimedEnchantment remove(int id) {
+        for (TimedEnchantment timedEnchantment : this.timedEnchantments) {
+            if (timedEnchantment.getId() == id) {
+                timedEnchantments.remove(timedEnchantment);
+                return timedEnchantment;
+            }
+        }
+
+        return null;
     }
 
     static {
