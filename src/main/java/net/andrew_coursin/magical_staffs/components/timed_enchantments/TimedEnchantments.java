@@ -7,7 +7,6 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
-import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,14 +20,18 @@ public class TimedEnchantments {
     public static final Codec<TimedEnchantments> CODEC;
     public static final StreamCodec<RegistryFriendlyByteBuf, TimedEnchantments> STREAM_CODEC;
     private static final Codec<List<TimedEnchantment>> LIST_CODEC;
-    private final List<TimedEnchantment> timedEnchantments;
+    private final List<TimedEnchantment> timedEnchantments = new ArrayList<>();
 
     private TimedEnchantments(List<TimedEnchantment> timedEnchantments) {
-        this.timedEnchantments = timedEnchantments;
+        for (TimedEnchantment timedEnchantment : timedEnchantments) {
+            if (timedEnchantment.getDuration() > 0) {
+                this.timedEnchantments.add(timedEnchantment);
+            }
+        }
     }
 
     public TimedEnchantments add(TimedEnchantment timedEnchantment) {
-        TimedEnchantments newTimedEnchantments = new TimedEnchantments(new ArrayList<>());
+        TimedEnchantments newTimedEnchantments = new TimedEnchantments(new ArrayList<>(this.timedEnchantments));
         newTimedEnchantments.timedEnchantments.add(timedEnchantment);
         return newTimedEnchantments;
     }
@@ -37,16 +40,11 @@ public class TimedEnchantments {
         return this.timedEnchantments.isEmpty();
     }
 
-    @Nullable
-    public TimedEnchantment remove(int id) {
-        for (TimedEnchantment timedEnchantment : this.timedEnchantments) {
-            if (timedEnchantment.getId() == id) {
-                timedEnchantments.remove(timedEnchantment);
-                return timedEnchantment;
-            }
-        }
-
-        return null;
+    public TimedEnchantments remove() {
+        TimedEnchantments newTimedEnchantments = new TimedEnchantments(new ArrayList<>(this.timedEnchantments));
+        newTimedEnchantments.timedEnchantments.removeIf(timedEnchantment -> timedEnchantment.getDuration() <= 0);
+        if (newTimedEnchantments.isEmpty()) return EMPTY;
+        return newTimedEnchantments;
     }
 
     static {

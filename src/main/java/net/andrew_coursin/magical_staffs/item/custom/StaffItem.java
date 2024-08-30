@@ -8,7 +8,6 @@ import net.andrew_coursin.magical_staffs.effect.ModEffects;
 import net.andrew_coursin.magical_staffs.components.forge_material.ForgeMaterial;
 import net.andrew_coursin.magical_staffs.components.forge_material.ForgeMaterials;
 import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantment;
-import net.andrew_coursin.magical_staffs.item.TimedItemStack;
 import net.andrew_coursin.magical_staffs.networking.ModPacketHandler;
 import net.andrew_coursin.magical_staffs.networking.packet.StaffItemKeyBindC2SPacket;
 import net.andrew_coursin.magical_staffs.util.ModKeyBindings;
@@ -333,17 +332,18 @@ public class StaffItem extends Item {
         for (int i = 0; i < storedStaffEffects.size(true); i++) {
             Holder<Enchantment> enchantment = storedStaffEffects.getEnchantment(i);
             int addLevel = storedStaffEffects.getValue(Either.left(enchantment), StoredStaffEffects.Indices.LEVEL);
-            TimedEnchantment timedEnchantment = new TimedEnchantment(enchantment, getActiveDuration(staffItemStack), addLevel);
 
-            for (int j = 0; j < player.containerMenu.slots.size(); j++) {
-                ItemStack otherItemStack = player.containerMenu.slots.get(j).getItem();
-                if (!enchantment.get().canEnchant(otherItemStack)) continue;
-                int newLevel = EnchantmentHelper.getItemEnchantmentLevel(enchantment, otherItemStack) + addLevel;
-                TimedItemStack timedItemStack = new TimedItemStack(otherItemStack);
-                timedItemStack.enchant(enchantment, newLevel);
-                TimedEnchantments timedEnchantments = timedItemStack.getOrDefault(ModComponents.TIMED_ENCHANTMENTS.get(), TimedEnchantments.EMPTY);
-                timedItemStack.set(ModComponents.TIMED_ENCHANTMENTS.get(), timedEnchantments.add(timedEnchantment));
-                player.containerMenu.setItem(j, player.containerMenu.getStateId(), timedItemStack);
+            for (ItemStack itemStack : player.containerMenu.getItems()) {
+                if (!enchantment.value().canEnchant(itemStack)) continue;
+
+                // Increase the enchantment level
+                int newLevel = EnchantmentHelper.getItemEnchantmentLevel(enchantment, itemStack) + addLevel;
+                itemStack.enchant(enchantment, newLevel);
+
+                // Add the timed enchantment
+                TimedEnchantment timedEnchantment = new TimedEnchantment(enchantment, getActiveDuration(staffItemStack), addLevel);
+                TimedEnchantments timedEnchantments = itemStack.getOrDefault(ModComponents.TIMED_ENCHANTMENTS.get(), TimedEnchantments.EMPTY);
+                itemStack.set(ModComponents.TIMED_ENCHANTMENTS.get(), timedEnchantments.add(timedEnchantment));
             }
         }
     }
