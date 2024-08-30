@@ -22,18 +22,18 @@ public class ModPacketHandler {
                 .consumerMainThread(StaffItemKeyBindC2SPacket::handle)
                 .add();
 
-//        INSTANCE.messageBuilder(AddTimedEnchantmentsTooltipsC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-//                .decoder(AddTimedEnchantmentsTooltipsC2SPacket::new)
-//                .encoder(AddTimedEnchantmentsTooltipsC2SPacket::toBytes)
-//                .consumerMainThread(AddTimedEnchantmentsTooltipsC2SPacket::handle)
-//                .add();
-//
-//        INSTANCE.messageBuilder(AddTimedEnchantmentsTooltipsS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-//                .decoder(AddTimedEnchantmentsTooltipsS2CPacket::new)
-//                .encoder(AddTimedEnchantmentsTooltipsS2CPacket::toBytes)
-//                .consumerMainThread(AddTimedEnchantmentsTooltipsS2CPacket::handle)
-//                .add();
-//
+        INSTANCE.messageBuilder(AddTimedEnchantmentsTooltipsC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(AddTimedEnchantmentsTooltipsC2SPacket::new)
+                .encoder(AddTimedEnchantmentsTooltipsC2SPacket::toBytes)
+                .consumerMainThread(AddTimedEnchantmentsTooltipsC2SPacket::handle)
+                .add();
+
+        INSTANCE.messageBuilder(AddTimedEnchantmentsTooltipsS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(AddTimedEnchantmentsTooltipsS2CPacket::new)
+                .encoder(AddTimedEnchantmentsTooltipsS2CPacket::toBytes)
+                .consumerMainThread(AddTimedEnchantmentsTooltipsS2CPacket::handle)
+                .add();
+
 //        INSTANCE.messageBuilder(SetTimerS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
 //                .decoder(SetTimerS2CPacket::new)
 //                .encoder(SetTimerS2CPacket::toBytes)

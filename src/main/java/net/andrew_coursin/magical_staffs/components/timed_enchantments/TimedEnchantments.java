@@ -47,6 +47,20 @@ public class TimedEnchantments {
         return newTimedEnchantments;
     }
 
+    public void deserializeDurations(List<Integer> durations) {
+        if (this.timedEnchantments.size() != durations.size()) return;
+
+        for (int i = 0; i < durations.size(); i++) {
+            this.timedEnchantments.get(i).setDuration(durations.get(i));
+        }
+    }
+
+    public List<Integer> serializeDurations() {
+        List<Integer> list = new ArrayList<>();
+        this.timedEnchantments.forEach(timedEnchantment -> list.add(timedEnchantment.getDuration()));
+        return list;
+    }
+
     static {
         LIST_CODEC = TimedEnchantment.CODEC.listOf().xmap(ArrayList::new, Function.identity());
 

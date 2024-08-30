@@ -42,6 +42,10 @@ public class TimedEnchantment {
         return this.level;
     }
 
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
+
     @Override
     public boolean equals(Object pOther) {
         if (this == pOther) {

@@ -6,12 +6,17 @@ import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnch
 import net.andrew_coursin.magical_staffs.effect.AttackMobEffectInstance;
 import net.andrew_coursin.magical_staffs.inventory.StaffItemListener;
 import net.andrew_coursin.magical_staffs.inventory.TimedEnchantmentsListener;
+import net.andrew_coursin.magical_staffs.networking.ModPacketHandler;
+import net.andrew_coursin.magical_staffs.networking.packet.AddTimedEnchantmentsTooltipsC2SPacket;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -37,8 +42,13 @@ public class ModEvents {
     @SubscribeEvent
     public static void addTimedEnchantmentsTooltips(final ItemTooltipEvent event) {
         TimedEnchantments timedEnchantments = event.getItemStack().get(ModComponents.TIMED_ENCHANTMENTS.get());
+        Player player = event.getEntity();
 
-        if (timedEnchantments == null || event.getEntity() == null) return;
+        if (timedEnchantments == null || player == null) return;
+
+        // On the server side player.containerMenu is set to inventoryMenu instead of CreativeModeInventoryScreen.ItemPickerMenu
+        AbstractContainerMenu containerMenu = player.containerMenu instanceof CreativeModeInventoryScreen.ItemPickerMenu ? player.inventoryMenu : player.containerMenu;
+        ModPacketHandler.sendToServer(new AddTimedEnchantmentsTooltipsC2SPacket(containerMenu.getItems().indexOf(event.getItemStack())));
 
         Item.TooltipContext tooltipContext = Item.TooltipContext.of(event.getEntity().level());
 
