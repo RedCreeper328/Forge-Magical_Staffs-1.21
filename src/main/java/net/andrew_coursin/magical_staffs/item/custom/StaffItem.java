@@ -4,6 +4,7 @@ import com.mojang.datafixers.util.Either;
 import net.andrew_coursin.magical_staffs.components.ModComponents;
 import net.andrew_coursin.magical_staffs.components.stored_staff_effects.StoredStaffEffects;
 import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantments;
+import net.andrew_coursin.magical_staffs.effect.AttackMobEffectInstance;
 import net.andrew_coursin.magical_staffs.effect.ModEffects;
 import net.andrew_coursin.magical_staffs.components.forge_material.ForgeMaterial;
 import net.andrew_coursin.magical_staffs.components.forge_material.ForgeMaterials;
@@ -360,7 +361,7 @@ public class StaffItem extends Item {
                 MobEffectInstance mobEffectInstance = player.getEffect(potion);
                 player.addEffect(new MobEffectInstance(potion, getActiveDuration(staffItemStack), amplifier + (mobEffectInstance != null ? mobEffectInstance.getAmplifier() + 1 : 0)));
             } else if (attackMobEffect != null) {
-                player.addEffect(new MobEffectInstance(attackMobEffect, getActiveDuration(staffItemStack), amplifier));
+                player.addEffect(new AttackMobEffectInstance(attackMobEffect, getActiveDuration(staffItemStack), amplifier));
             }
         }
     }
