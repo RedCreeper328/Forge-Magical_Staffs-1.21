@@ -4,6 +4,7 @@ import com.mojang.datafixers.util.Either;
 import net.andrew_coursin.magical_staffs.components.ModComponents;
 import net.andrew_coursin.magical_staffs.components.stored_staff_effects.StoredStaffEffects;
 import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantments;
+import net.andrew_coursin.magical_staffs.components.timer.Timer;
 import net.andrew_coursin.magical_staffs.effect.AttackMobEffectInstance;
 import net.andrew_coursin.magical_staffs.effect.ModEffects;
 import net.andrew_coursin.magical_staffs.components.forge_material.ForgeMaterial;
@@ -89,22 +90,12 @@ public class StaffItem extends Item {
 
     private int getActiveDuration(ItemStack staffItemStack) {
         ForgeMaterial forgeMaterial = getForgeMaterial(staffItemStack);
-//
-//        if (forgeMaterial.activeDuration() == Integer.MIN_VALUE) {
-//            return this.activeDuration;
-//        } else {
         return (this.activeDuration + forgeMaterial.activeDuration()) / 2;
-//        }
     }
 
     private int getCooldownDuration(ItemStack staffItemStack) {
         ForgeMaterial forgeMaterial = getForgeMaterial(staffItemStack);
-
-//        if (forgeMaterial.cooldownFactor() == Integer.MIN_VALUE) {
-//            return getActiveDuration(staffItemStack) / (1 + 1 / this.coolDownFactor);
-//        } else {
         return getActiveDuration(staffItemStack) + getActiveDuration(staffItemStack) * 2 / (this.coolDownFactor + forgeMaterial.cooldownFactor());
-//        }
     }
 
     private int getMaxSlots(boolean isEnchantment, ItemStack staffItemStack) {
@@ -313,18 +304,7 @@ public class StaffItem extends Item {
         imbuePotions(staffItemStack, player);
         player.giveExperienceLevels(-1 * experienceCost);
         player.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
-        player.getCooldowns().addCooldown(this, getCooldownDuration(staffItemStack));
-//        staffItemStack.getCapability(TimerCapabilityProvider.TIMER).ifPresent(timer -> timer.setTime(getActiveDuration(staffItemStack) + getCoolDownDuration(staffItemStack)));
-
-        // Sent a packet to the player so that the foil appears properly
-//        if (player instanceof ServerPlayer serverPlayer) {
-//            for (int i = 0; i < player.getInventory().getContainerSize(); ++i) {
-//                if (!player.getInventory().getItem(i).isEmpty() && ItemStack.isSameItemSameTags(staffItemStack, player.getInventory().getItem(i))) {
-//                    ModPacketHandler.sendToPlayer(new SetTimerS2CPacket(i, getActiveDuration(staffItemStack) + getCoolDownDuration(staffItemStack)), serverPlayer);
-//                    break;
-//                }
-//            }
-//        }
+        staffItemStack.set(ModComponents.TIMER.get(), new Timer(getCooldownDuration(staffItemStack)));
     }
 
     private void imbueEnchantments(ItemStack staffItemStack, Player player) {
@@ -654,12 +634,7 @@ public class StaffItem extends Item {
     // Override public methods
     @Override
     public boolean isFoil(ItemStack pStack) {
-        return true;
-//        if (pStack.getCapability(TimerCapabilityProvider.TIMER).resolve().isEmpty()) {
-//            return false;
-//        } else {
-//            return pStack.getCapability(TimerCapabilityProvider.TIMER).resolve().get().getTime() == 0;
-//        }
+        return pStack.getOrDefault(ModComponents.TIMER.get(), new Timer(0)).getTime() <= 0;
     }
 
     @Override
@@ -679,16 +654,14 @@ public class StaffItem extends Item {
     public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
         ItemStack itemStack = pPlayer.getItemInHand(pUsedHand);
 
-//        if (!this.isFoil(itemStack)) {
-//            itemStack.getCapability(TimerCapabilityProvider.TIMER).ifPresent(
-//                timer -> message(false, pPlayer, Component.translatable("message.magical_staffs.on_cool_down", StringUtil.formatTickDuration(timer.getTime())).getString())
-//            );
-//            return InteractionResultHolder.fail(itemStack);
-//        }
-
         if (pLevel.isClientSide()) {
-            pPlayer.startUsingItem(pUsedHand);
-            return InteractionResultHolder.consume(itemStack);
+            return InteractionResultHolder.pass(itemStack);
+        }
+
+        if (!this.isFoil(itemStack)) {
+            Timer timer = itemStack.getOrDefault(ModComponents.TIMER.get(), new Timer(0));
+            message(false, pPlayer, Component.translatable("message.magical_staffs.on_cool_down", StringUtil.formatTickDuration(timer.getTime(), pLevel.tickRateManager().tickrate())).getString());
+            return InteractionResultHolder.fail(itemStack);
         }
 
         if (pPlayer.isSecondaryUseActive()) {
