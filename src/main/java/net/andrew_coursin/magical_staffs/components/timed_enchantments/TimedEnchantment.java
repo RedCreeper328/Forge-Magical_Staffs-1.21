@@ -20,7 +20,7 @@ public class TimedEnchantment {
     public static final Codec<TimedEnchantment> CODEC;
     public static final StreamCodec<RegistryFriendlyByteBuf, TimedEnchantment> STREAM_CODEC;
 
-    public TimedEnchantment(Holder<Enchantment> pEnchantment, int pDuration, int pLevel/*, int pId*/) {
+    public TimedEnchantment(Holder<Enchantment> pEnchantment, int pDuration, int pLevel) {
         this.duration = pDuration;
         this.enchantment = pEnchantment;
         this.level = pLevel;
@@ -51,7 +51,7 @@ public class TimedEnchantment {
         if (this == pOther) {
             return true;
         } else {
-            return pOther instanceof TimedEnchantment timedEnchantment && this.enchantment == timedEnchantment.enchantment && this.duration == timedEnchantment.duration/* && this.id == timedEnchantment.id*/;
+            return pOther instanceof TimedEnchantment timedEnchantment && this.enchantment == timedEnchantment.enchantment && this.duration == timedEnchantment.duration && this.level == timedEnchantment.level;
         }
     }
 
@@ -59,6 +59,7 @@ public class TimedEnchantment {
     public int hashCode() {
         int i = this.enchantment.hashCode();
         i = 31 * i + this.duration;
+        i = 31 * i + this.level;
         return i;
     }
 

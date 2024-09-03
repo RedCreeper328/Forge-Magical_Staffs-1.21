@@ -10,6 +10,7 @@ import net.andrew_coursin.magical_staffs.effect.ModEffects;
 import net.andrew_coursin.magical_staffs.components.forge_material.ForgeMaterial;
 import net.andrew_coursin.magical_staffs.components.forge_material.ForgeMaterials;
 import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantment;
+import net.andrew_coursin.magical_staffs.level.TimedEnchantmentSavedData;
 import net.andrew_coursin.magical_staffs.networking.ModPacketHandler;
 import net.andrew_coursin.magical_staffs.networking.packet.StaffItemKeyBindC2SPacket;
 import net.andrew_coursin.magical_staffs.util.ModKeyBindings;
@@ -313,6 +314,8 @@ public class StaffItem extends Item {
         for (int i = 0; i < storedStaffEffects.size(true); i++) {
             Holder<Enchantment> enchantment = storedStaffEffects.getEnchantment(i);
             int addLevel = storedStaffEffects.getValue(Either.left(enchantment), StoredStaffEffects.Indices.LEVEL);
+            TimedEnchantment timedEnchantment = new TimedEnchantment(enchantment, getActiveDuration(staffItemStack), addLevel);
+            int timedEnchantmentId = TimedEnchantmentSavedData.addTimedEnchantment(timedEnchantment);
 
             for (ItemStack itemStack : player.containerMenu.getItems()) {
                 if (!enchantment.value().canEnchant(itemStack)) continue;
@@ -322,9 +325,8 @@ public class StaffItem extends Item {
                 itemStack.enchant(enchantment, newLevel);
 
                 // Add the timed enchantment
-                TimedEnchantment timedEnchantment = new TimedEnchantment(enchantment, getActiveDuration(staffItemStack), addLevel);
                 TimedEnchantments timedEnchantments = itemStack.getOrDefault(ModComponents.TIMED_ENCHANTMENTS.get(), TimedEnchantments.EMPTY);
-                itemStack.set(ModComponents.TIMED_ENCHANTMENTS.get(), timedEnchantments.add(timedEnchantment));
+                itemStack.set(ModComponents.TIMED_ENCHANTMENTS.get(), timedEnchantments.add(timedEnchantmentId, timedEnchantment));
             }
         }
     }
@@ -654,9 +656,7 @@ public class StaffItem extends Item {
     public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
         ItemStack itemStack = pPlayer.getItemInHand(pUsedHand);
 
-        if (pLevel.isClientSide()) {
-            return InteractionResultHolder.pass(itemStack);
-        }
+        if (pLevel.isClientSide()) return InteractionResultHolder.pass(itemStack);
 
         if (!this.isFoil(itemStack)) {
             Timer timer = itemStack.getOrDefault(ModComponents.TIMER.get(), new Timer(0));
@@ -671,12 +671,8 @@ public class StaffItem extends Item {
         }
 
         switch (mode) {
-            case ABSORB -> {
-                if (pUsedHand == InteractionHand.MAIN_HAND) completeAbsorb(pPlayer);
-            }
-            case INFUSE -> {
-                if (pUsedHand == InteractionHand.MAIN_HAND) completeInfuse(pPlayer);
-            }
+            case ABSORB -> { if (pUsedHand == InteractionHand.MAIN_HAND) completeAbsorb(pPlayer); }
+            case INFUSE -> { if (pUsedHand == InteractionHand.MAIN_HAND) completeInfuse(pPlayer); }
             case IMBUE -> imbue(itemStack, pPlayer);
         }
 
