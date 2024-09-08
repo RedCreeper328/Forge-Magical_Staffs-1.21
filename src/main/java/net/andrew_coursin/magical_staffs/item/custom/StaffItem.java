@@ -17,7 +17,6 @@ import net.andrew_coursin.magical_staffs.util.ModKeyBindings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.CommonComponents;
@@ -37,7 +36,6 @@ import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.enchantment.*;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -636,15 +634,7 @@ public class StaffItem extends Item {
     // Override public methods
     @Override
     public boolean isFoil(ItemStack pStack) {
-        return pStack.getOrDefault(ModComponents.TIMER.get(), new Timer(0)).getTime() <= 0;
-    }
-
-    @Override
-    public boolean canAttackBlock(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer) {
-        return switch (mode) {
-            case ABSORB, INFUSE -> false;
-            case IMBUE -> true;
-        };
+        return pStack.getOrDefault(ModComponents.TIMER.get(), Timer.DEFAULT).getTime() <= 0;
     }
 
     @Override
@@ -656,27 +646,24 @@ public class StaffItem extends Item {
     public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
         ItemStack itemStack = pPlayer.getItemInHand(pUsedHand);
 
-        if (pLevel.isClientSide()) return InteractionResultHolder.pass(itemStack);
-
         if (!this.isFoil(itemStack)) {
-            Timer timer = itemStack.getOrDefault(ModComponents.TIMER.get(), new Timer(0));
+            Timer timer = itemStack.getOrDefault(ModComponents.TIMER.get(), Timer.DEFAULT);
             message(false, pPlayer, Component.translatable("message.magical_staffs.on_cool_down", StringUtil.formatTickDuration(timer.getTime(), pLevel.tickRateManager().tickrate())).getString());
             return InteractionResultHolder.fail(itemStack);
         }
-
-        if (pPlayer.isSecondaryUseActive()) {
-            cycleMode(pPlayer);
-            pPlayer.startUsingItem(pUsedHand);
-            return InteractionResultHolder.consume(itemStack);
-        }
-
-        switch (mode) {
-            case ABSORB -> { if (pUsedHand == InteractionHand.MAIN_HAND) completeAbsorb(pPlayer); }
-            case INFUSE -> { if (pUsedHand == InteractionHand.MAIN_HAND) completeInfuse(pPlayer); }
-            case IMBUE -> imbue(itemStack, pPlayer);
-        }
-
         pPlayer.startUsingItem(pUsedHand);
+
+        if (pLevel.isClientSide()) return InteractionResultHolder.consume(itemStack);
+
+        if (pPlayer.isSecondaryUseActive()) cycleMode(pPlayer);
+        else {
+            switch (mode) {
+                case ABSORB -> { if (pUsedHand == InteractionHand.MAIN_HAND) completeAbsorb(pPlayer); }
+                case INFUSE -> { if (pUsedHand == InteractionHand.MAIN_HAND) completeInfuse(pPlayer); }
+                case IMBUE -> imbue(itemStack, pPlayer);
+            }
+        }
+
         return InteractionResultHolder.consume(itemStack);
     }
 

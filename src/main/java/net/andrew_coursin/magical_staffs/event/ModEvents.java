@@ -119,13 +119,6 @@ public class ModEvents {
     @SubscribeEvent
     public static void tick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.END) return;
-        TimedEnchantmentSavedData.tick();
-    }
-
-    @SubscribeEvent
-    public static void timedEnchantmentEnd(TimedEnchantmentEndEvent event) {
-        int id = event.getId();
-        TimedEnchantment timedEnchantment = event.getTimedEnchantment();
-        TIMED_ITEM_STACKS.removeIf(itemStack -> removeTimedEnchantment(itemStack, id, timedEnchantment));
+        TimedEnchantmentSavedData.tick().forEach((id, timedEnchantment) -> TIMED_ITEM_STACKS.removeIf(itemStack -> removeTimedEnchantment(itemStack, id, timedEnchantment)));
     }
 }

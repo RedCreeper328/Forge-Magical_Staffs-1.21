@@ -46,23 +46,6 @@ public class TimedEnchantment {
         this.duration = duration;
     }
 
-    @Override
-    public boolean equals(Object pOther) {
-        if (this == pOther) {
-            return true;
-        } else {
-            return pOther instanceof TimedEnchantment timedEnchantment && this.enchantment == timedEnchantment.enchantment && this.duration == timedEnchantment.duration && this.level == timedEnchantment.level;
-        }
-    }
-
-    @Override
-    public int hashCode() {
-        int i = this.enchantment.hashCode();
-        i = 31 * i + this.duration;
-        i = 31 * i + this.level;
-        return i;
-    }
-
     public boolean tick() {
         this.duration--;
         return duration <= 0;

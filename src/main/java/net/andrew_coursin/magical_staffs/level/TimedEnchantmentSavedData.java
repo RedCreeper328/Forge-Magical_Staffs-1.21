@@ -3,7 +3,6 @@ package net.andrew_coursin.magical_staffs.level;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantment;
-import net.andrew_coursin.magical_staffs.event.TimedEnchantmentEndEvent;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -12,7 +11,6 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
-import net.minecraftforge.common.MinecraftForge;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
@@ -78,15 +76,12 @@ public class TimedEnchantmentSavedData extends SavedData {
         return get().timedEnchantments.get(id);
     }
 
-    public static void tick() {
-        Map<Integer, TimedEnchantment> copy = new HashMap<>(get().timedEnchantments);
-        copy.forEach((id, timedEnchantment) -> {
-            if (timedEnchantment.tick()) {
-                get().timedEnchantments.remove(id, timedEnchantment);
-                MinecraftForge.EVENT_BUS.post(new TimedEnchantmentEndEvent(id, timedEnchantment));
-            }
-        });
+    public static Map<Integer, TimedEnchantment> tick() {
         get().setDirty();
+        Map<Integer, TimedEnchantment> removed = new HashMap<>();
+        get().timedEnchantments.forEach((id, timedEnchantment) -> { if (timedEnchantment.tick()) removed.put(id, timedEnchantment); });
+        removed.forEach((id, timedEnchantment) -> get().timedEnchantments.remove(id, timedEnchantment));
+        return removed;
     }
 
     @Override
