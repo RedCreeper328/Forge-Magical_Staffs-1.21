@@ -26,8 +26,10 @@ public class StaffItemKeyBindC2SPacket {
     public void handle(CustomPayloadEvent.Context context) {
         context.enqueueWork(() -> {
             ServerPlayer player = context.getSender();
-            if (player == null || !(player.getMainHandItem().getItem() instanceof StaffItem staffItem)) return;
-            staffItem.useKeyBind(player, this.keyBind);
+            if (player == null) return;
+            if (player.getMainHandItem().getItem() instanceof StaffItem staffItem) staffItem.useKeyBind(player.getOffhandItem(), player.getMainHandItem(), player, this.keyBind);
+            else if (player.getOffhandItem().getItem() instanceof StaffItem staffItem) staffItem.useKeyBind(player.getMainHandItem(), player.getOffhandItem(), player, this.keyBind);
+
         });
         context.setPacketHandled(true);
     }

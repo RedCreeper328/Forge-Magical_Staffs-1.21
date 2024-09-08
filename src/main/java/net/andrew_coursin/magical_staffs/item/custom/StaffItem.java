@@ -119,12 +119,11 @@ public class StaffItem extends Item {
         return isEnchantment ? (int) (Math.pow(2, slots) - 1) : slots * (slots + 1) / 2;
     }
 
-    private void absorbEnchantment(Player player) {
+    private void absorbEnchantment(ItemStack otherItemStack, Player player) {
         // Don't remove the effect if the player is in creative
         if (player.isCreative()) return;
 
         // Set the new level of the enchantment
-        ItemStack otherItemStack = player.getOffhandItem();
         ItemEnchantments otherEnchantments = EnchantmentHelper.getEnchantmentsForCrafting(otherItemStack);
         ItemEnchantments.Mutable mutableOtherEnchantments = new ItemEnchantments.Mutable(otherEnchantments);
         mutableOtherEnchantments.set(this.absorbEnchantment, this.newOtherLevel);
@@ -132,7 +131,8 @@ public class StaffItem extends Item {
 
         // Replace an empty enchanted book with a book item
         if (otherItemStack.is(Items.ENCHANTED_BOOK) && mutableOtherEnchantments.toImmutable().isEmpty()) {
-            player.setItemInHand(InteractionHand.OFF_HAND, Items.BOOK.getDefaultInstance());
+            InteractionHand interactionHand = player.getUsedItemHand() == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
+            player.setItemInHand(interactionHand, Items.BOOK.getDefaultInstance());
         }
     }
 
@@ -195,7 +195,7 @@ public class StaffItem extends Item {
         tooltipComponents.addAll(potionComponents);
     }
 
-    private void completeAbsorb(Player player) {
+    private void completeAbsorb(ItemStack otherItemStack, ItemStack staffItemStack, Player player) {
         // Cannot absorb with no selected enchantment or potion
         if (this.absorbEnchantment == null && this.absorbPotion == null) {
             message(false, player, Component.translatable("message.magical_staffs.no_choices").getString());
@@ -209,7 +209,6 @@ public class StaffItem extends Item {
         }
 
         // Initialize local variables based on isEnchantment
-        ItemStack staffItemStack = player.getMainHandItem();
         boolean isEnchantment = this.absorbEnchantment != null;
         StoredStaffEffects.Mutable storedStaffEffects = new StoredStaffEffects.Mutable(getStoredEffects(staffItemStack));
 
@@ -221,7 +220,7 @@ public class StaffItem extends Item {
         staffItemStack.set(ModComponents.STORED_STAFF_EFFECTS.get(), storedStaffEffects.toImmutable());
 
         // Update the other item tag or player effect to the new level
-        if (isEnchantment) absorbEnchantment(player);
+        if (isEnchantment) absorbEnchantment(otherItemStack, player);
         else absorbPotion(player);
 
         // Reduce experience levels, message the player, and play the enchanting table sound
@@ -231,7 +230,7 @@ public class StaffItem extends Item {
         reset(false);
     }
 
-    private void completeInfuse(Player player) {
+    private void completeInfuse(ItemStack otherItemStack, ItemStack staffItemStack, Player player) {
         // Cannot infuse with no selected enchantment or potion
         if (this.infuseEnchantment == null && this.infusePotion == null) {
             message(false, player, Component.translatable("message.magical_staffs.no_choices").getString());
@@ -247,8 +246,6 @@ public class StaffItem extends Item {
         }
 
         // Initialize local variables
-        ItemStack staffItemStack = player.getMainHandItem();
-        ItemStack otherItemStack = player.getOffhandItem();
         boolean isEnchantment = !otherItemStack.is(Items.POTION);
         StoredStaffEffects.Mutable storedStaffEffects = new StoredStaffEffects.Mutable(getStoredEffects(staffItemStack));
 
@@ -351,7 +348,8 @@ public class StaffItem extends Item {
         if (otherItemStack.is(Items.BOOK)) {
             ItemStack newItemStack = Items.ENCHANTED_BOOK.getDefaultInstance();
             newItemStack.enchant(this.infuseEnchantment, this.newOtherLevel);
-            player.setItemInHand(InteractionHand.OFF_HAND, ItemUtils.createFilledResult(otherItemStack, player, newItemStack));
+            InteractionHand interactionHand = player.getUsedItemHand() == InteractionHand.MAIN_HAND ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND;
+            player.setItemInHand(interactionHand, ItemUtils.createFilledResult(otherItemStack, player, newItemStack));
         } else {
             otherItemStack.enchant(this.infuseEnchantment, this.newOtherLevel);
         }
@@ -377,9 +375,9 @@ public class StaffItem extends Item {
         otherItemStack.set(DataComponents.POTION_CONTENTS, newOtherPotions.withEffectAdded(newPotion));
     }
 
-    private void prepareAbsorb(boolean isEnchantment, int indexIncrement, ItemStack staffItemStack, Player player) {
+    private void prepareAbsorb(int indexIncrement, ItemStack otherItemStack, ItemStack staffItemStack, Player player) {
         // Initialize local variables based on isEnchantment
-        ItemStack otherItemStack = player.getOffhandItem();
+        boolean isEnchantment = !otherItemStack.isEmpty();
         ItemEnchantments otherEnchantments = isEnchantment ? EnchantmentHelper.getEnchantmentsForCrafting(otherItemStack) : null;
         Collection<MobEffectInstance> otherPotions = !isEnchantment ? player.getActiveEffects() : null;
         String type = isEnchantment ? "enchantment" : "potion";
@@ -448,9 +446,9 @@ public class StaffItem extends Item {
         message(false, player, Component.translatable("message.magical_staffs.absorb.prepare", nameComponent, newStaffLevelComponent, this.newStaffPoints, this.newStaffSlots, newOtherLevelComponent).getString());
     }
 
-    private void prepareInfuse(boolean isEnchantment, int indexIncrement, ItemStack staffItemStack, Player player) {
+    private void prepareInfuse(int indexIncrement, ItemStack otherItemStack, ItemStack staffItemStack, Player player) {
         // Initialize local variables
-        ItemStack otherItemStack = player.getOffhandItem();
+        boolean isEnchantment = !otherItemStack.is(Items.POTION);
         StoredStaffEffects storedStaffEffects = getStoredEffects(staffItemStack);
 
         // Stop if there is no offhand item
@@ -578,56 +576,56 @@ public class StaffItem extends Item {
         if (resetIndex) this.index = 0;
     }
 
-    public void useKeyBind(Player player, StaffItemKeyBindC2SPacket.KEY_BINDS keyBind) {
+    public void useKeyBind(ItemStack otherItemStack, ItemStack staffItemStack, Player player, StaffItemKeyBindC2SPacket.KEY_BINDS keyBind) {
         switch(keyBind) {
-            case CYCLE_FORWARD -> {
+            case CYCLE_FORWARD:
                 switch(mode) {
-                    case ABSORB -> {
+                    case ABSORB:
                         this.absorbLevel = 1;
-                        this.prepareAbsorb(!player.getOffhandItem().isEmpty(), 1, player.getMainHandItem(), player);
-                    }
-                    case INFUSE -> {
+                        this.prepareAbsorb(1, otherItemStack, staffItemStack, player);
+                        break;
+                    case INFUSE:
                         this.infuseLevel = 1;
-                        this.prepareInfuse(!player.getOffhandItem().is(Items.POTION), 1, player.getMainHandItem(), player);
-                    }
+                        this.prepareInfuse(1, otherItemStack, staffItemStack, player);
+                        break;
                 }
-            }
-            case CYCLE_BACKWARD -> {
+                break;
+            case CYCLE_BACKWARD:
                 switch(mode) {
-                    case ABSORB -> {
+                    case ABSORB:
                         this.absorbLevel = 1;
-                        this.prepareAbsorb(!player.getOffhandItem().isEmpty(), -1, player.getMainHandItem(), player);
-                    }
-                    case INFUSE -> {
+                        this.prepareAbsorb(-1, otherItemStack, staffItemStack, player);
+                        break;
+                    case INFUSE:
                         this.infuseLevel = 1;
-                        this.prepareInfuse(!player.getOffhandItem().is(Items.POTION), -1, player.getMainHandItem(), player);
-                    }
+                        this.prepareInfuse(-1, otherItemStack, staffItemStack, player);
+                        break;
                 }
-            }
-            case CYCLE_INCREASE -> {
+                break;
+            case CYCLE_INCREASE:
                 switch(mode) {
-                    case ABSORB -> {
+                    case ABSORB:
                         this.absorbLevel++;
-                        this.prepareAbsorb(!player.getOffhandItem().isEmpty(), 0, player.getMainHandItem(), player);
-                    }
-                    case INFUSE -> {
+                        this.prepareAbsorb(0, otherItemStack, staffItemStack, player);
+                        break;
+                    case INFUSE:
                         this.infuseLevel++;
-                        this.prepareInfuse(!player.getOffhandItem().is(Items.POTION), 0, player.getMainHandItem(), player);
-                    }
+                        this.prepareInfuse(0, otherItemStack, staffItemStack, player);
+                        break;
                 }
-            }
-            case CYCLE_DECREASE -> {
+                break;
+            case CYCLE_DECREASE:
                 switch(mode) {
-                    case ABSORB -> {
+                    case ABSORB:
                         this.absorbLevel--;
-                        this.prepareAbsorb(!player.getOffhandItem().isEmpty(), 0, player.getMainHandItem(), player);
-                    }
-                    case INFUSE -> {
+                        this.prepareAbsorb(0, otherItemStack, staffItemStack, player);
+                        break;
+                    case INFUSE:
                         this.infuseLevel--;
-                        this.prepareInfuse(!player.getOffhandItem().is(Items.POTION), 0, player.getMainHandItem(), player);
-                    }
+                        this.prepareInfuse(0, otherItemStack, staffItemStack, player);
+                        break;
                 }
-            }
+                break;
         }
     }
 
@@ -644,27 +642,28 @@ public class StaffItem extends Item {
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
-        ItemStack itemStack = pPlayer.getItemInHand(pUsedHand);
+        ItemStack staffItemStack = pPlayer.getItemInHand(pUsedHand);
+        ItemStack otherItemStack = pUsedHand == InteractionHand.MAIN_HAND ? pPlayer.getOffhandItem() : pPlayer.getMainHandItem();
 
-        if (!this.isFoil(itemStack)) {
-            Timer timer = itemStack.getOrDefault(ModComponents.TIMER.get(), Timer.DEFAULT);
+        if (!this.isFoil(staffItemStack)) {
+            Timer timer = staffItemStack.getOrDefault(ModComponents.TIMER.get(), Timer.DEFAULT);
             message(false, pPlayer, Component.translatable("message.magical_staffs.on_cool_down", StringUtil.formatTickDuration(timer.getTime(), pLevel.tickRateManager().tickrate())).getString());
-            return InteractionResultHolder.fail(itemStack);
+            return InteractionResultHolder.fail(staffItemStack);
         }
         pPlayer.startUsingItem(pUsedHand);
 
-        if (pLevel.isClientSide()) return InteractionResultHolder.consume(itemStack);
+        if (pLevel.isClientSide()) return InteractionResultHolder.consume(staffItemStack);
 
         if (pPlayer.isSecondaryUseActive()) cycleMode(pPlayer);
         else {
             switch (mode) {
-                case ABSORB -> { if (pUsedHand == InteractionHand.MAIN_HAND) completeAbsorb(pPlayer); }
-                case INFUSE -> { if (pUsedHand == InteractionHand.MAIN_HAND) completeInfuse(pPlayer); }
-                case IMBUE -> imbue(itemStack, pPlayer);
+                case ABSORB -> completeAbsorb(otherItemStack, staffItemStack, pPlayer);
+                case INFUSE -> completeInfuse(otherItemStack, staffItemStack, pPlayer);
+                case IMBUE -> imbue(staffItemStack, pPlayer);
             }
         }
 
-        return InteractionResultHolder.consume(itemStack);
+        return InteractionResultHolder.consume(staffItemStack);
     }
 
     @Override
