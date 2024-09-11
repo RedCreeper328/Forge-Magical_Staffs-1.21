@@ -25,9 +25,9 @@ public class MagicalStaffs
     // Define mod id in a common place for everything to reference
     public static final String MOD_ID = "magical_staffs";
 
-    public MagicalStaffs()
+    public MagicalStaffs(FMLJavaModLoadingContext context)
     {
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+        IEventBus modEventBus = context.getModEventBus();
 
         // Register mod registries
         ModComponents.register(modEventBus);

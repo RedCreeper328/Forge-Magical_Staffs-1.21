@@ -1,7 +1,5 @@
 package net.andrew_coursin.magical_staffs.item;
 
-import net.andrew_coursin.magical_staffs.components.ModComponents;
-import net.andrew_coursin.magical_staffs.components.stored_staff_effects.StoredStaffEffects;
 import net.andrew_coursin.magical_staffs.item.custom.StaffItem;
 import net.andrew_coursin.magical_staffs.components.forge_material.ForgeMaterials;
 import net.minecraft.ChatFormatting;
@@ -31,7 +29,7 @@ public class ModItems {
 
     public static final RegistryObject<SmithingTemplateItem> FORGE_UPGRADE_SMITHING_TEMPLATE = ITEMS.register("forge_upgrade_smithing_template", ModItems::createForgeUpgradeTemplate);
 
-    public static final RegistryObject<StaffItem> WOODEN_STAFF = ITEMS.register("wooden_staff", () -> new StaffItem(ForgeMaterials.WOOD.activeDuration(), ForgeMaterials.WOOD.cooldownFactor(), ForgeMaterials.WOOD.enchantmentSlots(), ForgeMaterials.WOOD.potionSlots(), new Item.Properties().stacksTo(1).component(ModComponents.STORED_STAFF_EFFECTS.get(), StoredStaffEffects.EMPTY)));
+    public static final RegistryObject<StaffItem> WOODEN_STAFF = ITEMS.register("wooden_staff", () -> new StaffItem(ForgeMaterials.WOOD.activeDuration(), ForgeMaterials.WOOD.cooldownFactor(), ForgeMaterials.WOOD.enchantmentSlots(), ForgeMaterials.WOOD.potionSlots(), new Item.Properties().stacksTo(1)));
 
     public static final RegistryObject<StaffItem> GOLDEN_STAFF = ITEMS.register("golden_staff", () -> new StaffItem(ForgeMaterials.GOLD.activeDuration(), ForgeMaterials.GOLD.cooldownFactor(), ForgeMaterials.GOLD.enchantmentSlots(), ForgeMaterials.GOLD.potionSlots(), new Item.Properties().stacksTo(1)));
 

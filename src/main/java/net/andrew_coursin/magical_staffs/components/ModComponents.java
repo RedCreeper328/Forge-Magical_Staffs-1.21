@@ -5,7 +5,7 @@ import net.andrew_coursin.magical_staffs.components.stored_staff_effects.StoredS
 import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantments;
 import net.andrew_coursin.magical_staffs.components.timer.Timer;
 import net.minecraft.core.component.DataComponentType;
-import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
@@ -15,7 +15,7 @@ import java.util.function.UnaryOperator;
 import static net.andrew_coursin.magical_staffs.MagicalStaffs.MOD_ID;
 
 public class ModComponents {
-    public static final DeferredRegister<DataComponentType<?>> MOD_COMPONENTS = DeferredRegister.create(BuiltInRegistries.DATA_COMPONENT_TYPE.key(), MOD_ID);
+    private static final DeferredRegister<DataComponentType<?>> MOD_COMPONENTS = DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, MOD_ID);
 
     public static final RegistryObject<DataComponentType<ForgeMaterial>> FORGE_MATERIAL = register("forge_material", builder -> builder.persistent(ForgeMaterial.CODEC));
 
@@ -29,7 +29,7 @@ public class ModComponents {
         MOD_COMPONENTS.register(eventBus);
     }
 
-    public static <T> RegistryObject<DataComponentType<T>> register(String name, UnaryOperator<DataComponentType.Builder<T>> builder) {
+    private static <T> RegistryObject<DataComponentType<T>> register(String name, UnaryOperator<DataComponentType.Builder<T>> builder) {
         return MOD_COMPONENTS.register(name, () -> builder.apply(DataComponentType.builder()).build());
     }
 }
