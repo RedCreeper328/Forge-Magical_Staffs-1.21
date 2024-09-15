@@ -1,6 +1,7 @@
 package net.andrew_coursin.magical_staffs.components;
 
 import net.andrew_coursin.magical_staffs.components.forge_material.ForgeMaterial;
+import net.andrew_coursin.magical_staffs.components.staff_modes.StaffModes;
 import net.andrew_coursin.magical_staffs.components.stored_staff_effects.StoredStaffEffects;
 import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantments;
 import net.andrew_coursin.magical_staffs.components.timer.Timer;
@@ -18,6 +19,8 @@ public class ModComponents {
     private static final DeferredRegister<DataComponentType<?>> MOD_COMPONENTS = DeferredRegister.create(Registries.DATA_COMPONENT_TYPE, MOD_ID);
 
     public static final RegistryObject<DataComponentType<ForgeMaterial>> FORGE_MATERIAL = register("forge_material", builder -> builder.persistent(ForgeMaterial.CODEC));
+
+    public static final RegistryObject<DataComponentType<StaffModes>> STAFF_MODES = register("staff_modes", builder -> builder.persistent(StaffModes.CODEC));
 
     public static final RegistryObject<DataComponentType<StoredStaffEffects>> STORED_STAFF_EFFECTS = register("stored_staff_effects", builder -> builder.persistent(StoredStaffEffects.CODEC).networkSynchronized(StoredStaffEffects.STREAM_CODEC));
 

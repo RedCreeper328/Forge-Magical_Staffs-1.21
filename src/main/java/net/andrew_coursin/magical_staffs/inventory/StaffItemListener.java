@@ -1,5 +1,7 @@
 package net.andrew_coursin.magical_staffs.inventory;
 
+import net.andrew_coursin.magical_staffs.components.ModComponents;
+import net.andrew_coursin.magical_staffs.components.staff_modes.StaffModes;
 import net.andrew_coursin.magical_staffs.item.custom.StaffItem;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerListener;
@@ -17,10 +19,11 @@ public class StaffItemListener implements ContainerListener {
 
     @Override
     public void slotChanged(AbstractContainerMenu pContainerToSend, int pDataSlotIndex, ItemStack pStack) {
-        if (pContainerToSend instanceof InventoryMenu inventoryMenu && pDataSlotIndex == InventoryMenu.SHIELD_SLOT) {
+        if (pContainerToSend instanceof InventoryMenu inventoryMenu) {
             inventoryMenu.getItems().forEach(itemStack -> {
-                if (itemStack.getItem() instanceof StaffItem staffItem) {
-                    staffItem.reset(true);
+                StaffModes staffModes = itemStack.get(ModComponents.STAFF_MODES.get());
+                if (itemStack.getItem() instanceof StaffItem && staffModes != null) {
+                    staffModes.reset(true);
                 }
             });
         }

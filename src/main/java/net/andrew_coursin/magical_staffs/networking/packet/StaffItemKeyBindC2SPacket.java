@@ -3,6 +3,7 @@ package net.andrew_coursin.magical_staffs.networking.packet;
 import net.andrew_coursin.magical_staffs.item.custom.StaffItem;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.network.CustomPayloadEvent;
 
 public class StaffItemKeyBindC2SPacket {
@@ -27,9 +28,14 @@ public class StaffItemKeyBindC2SPacket {
         context.enqueueWork(() -> {
             ServerPlayer player = context.getSender();
             if (player == null) return;
-            if (player.getMainHandItem().getItem() instanceof StaffItem staffItem) staffItem.useKeyBind(player.getOffhandItem(), player.getMainHandItem(), player, this.keyBind);
-            else if (player.getOffhandItem().getItem() instanceof StaffItem staffItem) staffItem.useKeyBind(player.getMainHandItem(), player.getOffhandItem(), player, this.keyBind);
-
+            if (player.getMainHandItem().getItem() instanceof StaffItem staffItem) {
+                ItemStack staffItemStack = player.getMainHandItem();
+                staffItem.useKeyBind(player.getOffhandItem(), staffItemStack, player, this.keyBind);
+            }
+            else if (player.getOffhandItem().getItem() instanceof StaffItem staffItem) {
+                ItemStack staffItemStack = player.getOffhandItem();
+                staffItem.useKeyBind(player.getMainHandItem(), staffItemStack, player, this.keyBind);
+            }
         });
         context.setPacketHandled(true);
     }

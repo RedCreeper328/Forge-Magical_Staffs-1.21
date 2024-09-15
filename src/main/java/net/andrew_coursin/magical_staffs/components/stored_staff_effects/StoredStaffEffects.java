@@ -12,6 +12,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 public class StoredStaffEffects {
@@ -118,9 +119,7 @@ public class StoredStaffEffects {
 
     @Override
     public int hashCode() {
-        int i = this.enchantments.hashCode();
-        i = 31 * i + this.potions.hashCode();
-        return i;
+        return Objects.hash(enchantments, enchantmentSlots, potions, potionSlots);
     }
 
     public static class Mutable extends StoredStaffEffects{

@@ -10,10 +10,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
 
 @MethodsReturnNonnullByDefault
@@ -101,12 +98,13 @@ public class TimedEnchantments {
         if (this == pOther) {
             return true;
         } else {
-            return pOther instanceof TimedEnchantments otherTimedEnchantments && this.timedEnchantments.equals(otherTimedEnchantments.timedEnchantments);
+            return pOther instanceof TimedEnchantments otherTimedEnchantments
+                    && this.timedEnchantments.equals(otherTimedEnchantments.timedEnchantments);
         }
     }
 
     @Override
     public int hashCode() {
-        return this.timedEnchantments.hashCode();
+        return Objects.hash(timedEnchantments);
     }
 }
