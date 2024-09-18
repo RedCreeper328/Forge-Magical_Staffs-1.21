@@ -8,10 +8,11 @@ import net.minecraft.world.item.ItemStack;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
-public class TimedEnchantmentsListener implements ContainerListener {
+public class TimerListener implements ContainerListener {
     @Override
     public void slotChanged(AbstractContainerMenu pContainerToSend, int pDataSlotIndex, ItemStack pStack) {
         ModEvents.addIfTimedItemStack(pContainerToSend.getItems().get(pDataSlotIndex));
+        ModEvents.addIfTimedStaff(pContainerToSend.getItems().get(pDataSlotIndex));
     }
 
     @Override

@@ -3,7 +3,7 @@ package net.andrew_coursin.magical_staffs.components.timed_enchantments;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.andrew_coursin.magical_staffs.level.TimedEnchantmentSavedData;
+import net.andrew_coursin.magical_staffs.level.TimerSavedData;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -53,7 +53,7 @@ public class TimedEnchantments {
 
     public List<Integer> serializeDurations() {
         List<Integer> list = new ArrayList<>();
-        this.timedEnchantments.forEach((id, timedEnchantment) -> list.add(TimedEnchantmentSavedData.get(id).getDuration()));
+        this.timedEnchantments.forEach((id, timedEnchantment) -> list.add(TimerSavedData.getTimedEnchantment(id).getDuration()));
         return list;
     }
 

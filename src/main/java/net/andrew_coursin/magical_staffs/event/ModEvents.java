@@ -6,8 +6,8 @@ import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnch
 import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantments;
 import net.andrew_coursin.magical_staffs.effect.AttackMobEffectInstance;
 import net.andrew_coursin.magical_staffs.inventory.StaffItemListener;
-import net.andrew_coursin.magical_staffs.inventory.TimedEnchantmentsListener;
-import net.andrew_coursin.magical_staffs.level.TimedEnchantmentSavedData;
+import net.andrew_coursin.magical_staffs.inventory.TimerListener;
+import net.andrew_coursin.magical_staffs.level.TimerSavedData;
 import net.andrew_coursin.magical_staffs.networking.ModPacketHandler;
 import net.andrew_coursin.magical_staffs.networking.packet.AddTimedEnchantmentsTooltipsC2SPacket;
 import net.minecraft.ChatFormatting;
@@ -41,10 +41,23 @@ import java.util.Set;
 @ParametersAreNonnullByDefault
 public class ModEvents {
     public static final Set<ItemStack> TIMED_ITEM_STACKS = new HashSet<>();
+    public static final Set<ItemStack> TIMED_STAFFS = new HashSet<>();
+
+    public static void addIfTimedStaff(ItemStack itemStack) {
+        Integer id = itemStack.get(ModComponents.STAFF_TIMER.get());
+        if (id != null && !TimerSavedData.hasStaffTimerId(id)) removeStaffTimer(itemStack, id);
+        else TIMED_STAFFS.add(itemStack);
+    }
+
+    public static boolean removeStaffTimer(ItemStack itemStack, int id) {
+        Integer staffTimer = itemStack.get(ModComponents.STAFF_TIMER.get());
+        if (staffTimer != null && staffTimer == id) itemStack.remove(ModComponents.STAFF_TIMER.get());
+        return !itemStack.has(ModComponents.STAFF_TIMER.get());
+    }
 
     public static void addIfTimedItemStack(ItemStack itemStack) {
         itemStack.getOrDefault(ModComponents.TIMED_ENCHANTMENTS.get(), TimedEnchantments.EMPTY).forEach((id, timedEnchantment) -> {
-            if (!TimedEnchantmentSavedData.has(id)) removeTimedEnchantment(itemStack, id, timedEnchantment);
+            if (!TimerSavedData.hasTimedEnchantmentId(id)) removeTimedEnchantment(itemStack, id, timedEnchantment);
         });
         if (!itemStack.getOrDefault(ModComponents.TIMED_ENCHANTMENTS.get(), TimedEnchantments.EMPTY).isEmpty()) TIMED_ITEM_STACKS.add(itemStack);
     }
@@ -99,26 +112,32 @@ public class ModEvents {
     @SubscribeEvent
     public static void onAttachSavedData(final LevelEvent.Load event) {
         if (event.getLevel() instanceof ServerLevel serverLevel && serverLevel.dimension() == ServerLevel.OVERWORLD) {
-            serverLevel.getDataStorage().computeIfAbsent(TimedEnchantmentSavedData.factory(serverLevel), TimedEnchantmentSavedData.FILE_NAME);
+            serverLevel.getDataStorage().computeIfAbsent(TimerSavedData.factory(serverLevel), TimerSavedData.FILE_NAME);
         }
     }
 
     @SubscribeEvent
     public static void onPlayerOpenContainer(final PlayerContainerEvent.Open event) {
-        event.getContainer().addSlotListener(new TimedEnchantmentsListener());
-        event.getContainer().getItems().forEach(ModEvents::addIfTimedItemStack);
+        event.getContainer().addSlotListener(new TimerListener());
+        event.getContainer().getItems().forEach(itemStack -> {
+            ModEvents.addIfTimedItemStack(itemStack);
+            ModEvents.addIfTimedStaff(itemStack);
+        });
     }
 
     @SubscribeEvent
     public static void onPlayerLoggedIn(final PlayerEvent.PlayerLoggedInEvent event) {
         event.getEntity().inventoryMenu.addSlotListener(new StaffItemListener());
-        event.getEntity().inventoryMenu.addSlotListener(new TimedEnchantmentsListener());
-        event.getEntity().inventoryMenu.getItems().forEach(ModEvents::addIfTimedItemStack);
+        event.getEntity().inventoryMenu.addSlotListener(new TimerListener());
+        event.getEntity().inventoryMenu.getItems().forEach(itemStack -> {
+            ModEvents.addIfTimedItemStack(itemStack);
+            ModEvents.addIfTimedStaff(itemStack);
+        });
     }
 
     @SubscribeEvent
     public static void tick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.END) return;
-        TimedEnchantmentSavedData.tick().forEach((id, timedEnchantment) -> TIMED_ITEM_STACKS.removeIf(itemStack -> removeTimedEnchantment(itemStack, id, timedEnchantment)));
+        TimerSavedData.tick();
     }
 }

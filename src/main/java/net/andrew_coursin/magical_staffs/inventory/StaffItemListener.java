@@ -19,13 +19,11 @@ public class StaffItemListener implements ContainerListener {
 
     @Override
     public void slotChanged(AbstractContainerMenu pContainerToSend, int pDataSlotIndex, ItemStack pStack) {
-        if (pContainerToSend instanceof InventoryMenu inventoryMenu) {
-            inventoryMenu.getItems().forEach(itemStack -> {
-                StaffModes staffModes = itemStack.get(ModComponents.STAFF_MODES.get());
-                if (itemStack.getItem() instanceof StaffItem && staffModes != null) {
-                    staffModes.reset(true);
-                }
-            });
-        }
+        if (!(pContainerToSend instanceof InventoryMenu inventoryMenu)) return;
+        inventoryMenu.getItems().forEach(itemStack -> {
+            if (!(itemStack.getItem() instanceof StaffItem)) return;
+            StaffModes staffModes = itemStack.get(ModComponents.STAFF_MODES.get());
+            if (staffModes != null) staffModes.reset(true);
+        });
     }
 }

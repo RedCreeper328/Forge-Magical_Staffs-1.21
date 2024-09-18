@@ -5,13 +5,12 @@ import net.andrew_coursin.magical_staffs.components.ModComponents;
 import net.andrew_coursin.magical_staffs.components.staff_modes.StaffModes;
 import net.andrew_coursin.magical_staffs.components.stored_staff_effects.StoredStaffEffects;
 import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantments;
-import net.andrew_coursin.magical_staffs.components.timer.Timer;
 import net.andrew_coursin.magical_staffs.effect.AttackMobEffectInstance;
 import net.andrew_coursin.magical_staffs.effect.ModEffects;
 import net.andrew_coursin.magical_staffs.components.forge_material.ForgeMaterial;
 import net.andrew_coursin.magical_staffs.components.forge_material.ForgeMaterials;
 import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantment;
-import net.andrew_coursin.magical_staffs.level.TimedEnchantmentSavedData;
+import net.andrew_coursin.magical_staffs.level.TimerSavedData;
 import net.andrew_coursin.magical_staffs.networking.ModPacketHandler;
 import net.andrew_coursin.magical_staffs.networking.packet.StaffItemKeyBindC2SPacket;
 import net.andrew_coursin.magical_staffs.util.ModKeyBindings;
@@ -250,9 +249,7 @@ public class StaffItem extends Item {
         staffModes.reset(false);
     }
 
-    private void cycleMode(ItemStack staffItemStack, Player player) {
-        StaffModes staffModes = staffItemStack.getOrDefault(ModComponents.STAFF_MODES.get(), new StaffModes());
-
+    private void cycleMode(Player player, StaffModes staffModes) {
         switch (staffModes.getMode()) {
             case ABSORB -> staffModes.setMode(StaffModes.Modes.INFUSE);
             case INFUSE -> staffModes.setMode(StaffModes.Modes.IMBUE);
@@ -284,7 +281,9 @@ public class StaffItem extends Item {
         imbuePotions(staffItemStack, player);
         player.giveExperienceLevels(-1 * experienceCost);
         player.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
-        staffItemStack.set(ModComponents.TIMER.get(), new Timer(getCooldownDuration(staffItemStack)));
+
+        int staffTimerId = TimerSavedData.addStaffTimer(getCooldownDuration(staffItemStack));
+        staffItemStack.set(ModComponents.STAFF_TIMER.get(), staffTimerId);
     }
 
     private void imbueEnchantments(ItemStack staffItemStack, Player player) {
@@ -294,7 +293,7 @@ public class StaffItem extends Item {
             Holder<Enchantment> enchantment = storedStaffEffects.getEnchantment(i);
             int addLevel = storedStaffEffects.getValue(Either.left(enchantment), StoredStaffEffects.Indices.LEVEL);
             TimedEnchantment timedEnchantment = new TimedEnchantment(enchantment, getActiveDuration(staffItemStack), addLevel);
-            int timedEnchantmentId = TimedEnchantmentSavedData.addTimedEnchantment(timedEnchantment);
+            int timedEnchantmentId = TimerSavedData.addTimedEnchantment(timedEnchantment);
 
             for (ItemStack itemStack : player.containerMenu.getItems()) {
                 if (!enchantment.value().canEnchant(itemStack)) continue;
@@ -612,7 +611,7 @@ public class StaffItem extends Item {
     // Override public methods
     @Override
     public boolean isFoil(ItemStack pStack) {
-        return pStack.getOrDefault(ModComponents.TIMER.get(), Timer.DEFAULT).getTime() <= 0;
+        return !pStack.has(ModComponents.STAFF_TIMER.get());
     }
 
     @Override
@@ -624,18 +623,20 @@ public class StaffItem extends Item {
     public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
         ItemStack staffItemStack = pPlayer.getItemInHand(pUsedHand);
         ItemStack otherItemStack = pUsedHand == InteractionHand.MAIN_HAND ? pPlayer.getOffhandItem() : pPlayer.getMainHandItem();
-        StaffModes staffModes = staffItemStack.getOrDefault(ModComponents.STAFF_MODES.get(), new StaffModes());
-
-        if (!this.isFoil(staffItemStack)) {
-            Timer timer = staffItemStack.getOrDefault(ModComponents.TIMER.get(), Timer.DEFAULT);
-            message(false, pPlayer, Component.translatable("message.magical_staffs.on_cool_down", StringUtil.formatTickDuration(timer.getTime(), pLevel.tickRateManager().tickrate())).getString());
-            return InteractionResultHolder.fail(staffItemStack);
-        }
-        pPlayer.startUsingItem(pUsedHand);
 
         if (pLevel.isClientSide()) return InteractionResultHolder.consume(staffItemStack);
+        pPlayer.startUsingItem(pUsedHand);
 
-        if (pPlayer.isSecondaryUseActive()) cycleMode(staffItemStack, pPlayer);
+        if (!this.isFoil(staffItemStack)) {
+            Integer staffTimer = staffItemStack.get(ModComponents.STAFF_TIMER.get());
+            if (staffTimer == null) return InteractionResultHolder.consume(staffItemStack);
+            int time = TimerSavedData.getStaffTimer(staffTimer);
+            message(false, pPlayer, Component.translatable("message.magical_staffs.on_cool_down", StringUtil.formatTickDuration(time, pLevel.tickRateManager().tickrate())).getString());
+            return InteractionResultHolder.consume(staffItemStack);
+        }
+
+        StaffModes staffModes = staffItemStack.getOrDefault(ModComponents.STAFF_MODES.get(), new StaffModes());
+        if (pPlayer.isSecondaryUseActive()) cycleMode(pPlayer, staffModes);
         else {
             switch (staffModes.getMode()) {
                 case ABSORB -> completeAbsorb(otherItemStack, staffItemStack, pPlayer, staffModes);
