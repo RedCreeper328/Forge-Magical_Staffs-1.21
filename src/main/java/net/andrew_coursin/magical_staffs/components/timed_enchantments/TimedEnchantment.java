@@ -10,6 +10,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.enchantment.Enchantment;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.Objects;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -49,6 +50,20 @@ public class TimedEnchantment {
     public boolean tick() {
         this.duration--;
         return duration <= 0;
+    }
+
+    @Override
+    public boolean equals(Object pOther) {
+        if (this == pOther) return true;
+        else return pOther instanceof TimedEnchantment timedEnchantment
+                && this.duration == timedEnchantment.duration
+                && this.enchantment == timedEnchantment.enchantment
+                && this.level == timedEnchantment.level;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.duration, this.enchantment, this.level);
     }
 
     static {

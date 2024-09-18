@@ -105,7 +105,7 @@ public class TimerSavedData extends SavedData {
     }
 
     public static int getStaffTimer(int id) {
-        return getInstance().staffTimers.get(id);
+        return getInstance().staffTimers.getOrDefault(id, 0);
     }
 
     public static TimedEnchantment getTimedEnchantment(int id) {
@@ -120,19 +120,19 @@ public class TimerSavedData extends SavedData {
         Map<Integer, TimedEnchantment> removedTimedEnchantments = new HashMap<>();
 
         // Ticks every value in the two maps
-        getInstance().staffTimers.forEach((id, time) -> { if (--time <= 0) removedStaffTimers.put(id, time); else getInstance().staffTimers.put(id, time); } );
+        getInstance().staffTimers.forEach((id, time) -> { if (time-- <= 0) removedStaffTimers.put(id, time); getInstance().staffTimers.put(id, time); } );
         getInstance().timedEnchantments.forEach((id, timedEnchantment) -> { if (timedEnchantment.tick()) removedTimedEnchantments.put(id, timedEnchantment); });
 
         // Removes any staff timers that have ended
         removedStaffTimers.forEach((id, time) -> {
             getInstance().staffTimers.remove(id, time);
-            ModEvents.TIMED_STAFFS.removeIf(itemStack -> ModEvents.removeStaffTimer(itemStack, id));
+            ModEvents.TIMED_STAFFS.forEach((containerMenu, indices) -> indices.removeIf(index -> ModEvents.removeStaffTimer(containerMenu.getItems().get(index), id)));
         });
 
         // Removes any timed enchantments that have ended
         removedTimedEnchantments.forEach((id, timedEnchantment) -> {
             getInstance().timedEnchantments.remove(id, timedEnchantment);
-            ModEvents.TIMED_ITEM_STACKS.removeIf(itemStack -> ModEvents.removeTimedEnchantment(itemStack, id, timedEnchantment));
+            ModEvents.TIMED_ITEM_STACKS.forEach((containerMenu, indices) -> indices.removeIf(index -> ModEvents.removeTimedEnchantment(containerMenu.getItems().get(index), id, timedEnchantment)));
         });
     }
 

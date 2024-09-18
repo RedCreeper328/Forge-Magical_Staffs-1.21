@@ -34,19 +34,23 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Mod.EventBusSubscriber(modid = MagicalStaffs.MOD_ID)
 @ParametersAreNonnullByDefault
 public class ModEvents {
-    public static final Set<ItemStack> TIMED_ITEM_STACKS = new HashSet<>();
-    public static final Set<ItemStack> TIMED_STAFFS = new HashSet<>();
+    public static final Map<AbstractContainerMenu, Set<Integer>> TIMED_ITEM_STACKS = new HashMap<>();
+    public static final Map<AbstractContainerMenu, Set<Integer>> TIMED_STAFFS = new HashMap<>();
 
-    public static void addIfTimedStaff(ItemStack itemStack) {
+    public static void addIfTimedStaff(AbstractContainerMenu containerMenu, int index) {
+        ItemStack itemStack = containerMenu.getItems().get(index);
         Integer id = itemStack.get(ModComponents.STAFF_TIMER.get());
         if (id != null && !TimerSavedData.hasStaffTimerId(id)) removeStaffTimer(itemStack, id);
-        else TIMED_STAFFS.add(itemStack);
+        else if (itemStack.has(ModComponents.STAFF_TIMER.get())) {
+            Set<Integer> indices = TIMED_STAFFS.getOrDefault(containerMenu, new HashSet<>());
+            indices.add(index);
+            TIMED_STAFFS.put(containerMenu, indices);
+        }
     }
 
     public static boolean removeStaffTimer(ItemStack itemStack, int id) {
@@ -55,11 +59,16 @@ public class ModEvents {
         return !itemStack.has(ModComponents.STAFF_TIMER.get());
     }
 
-    public static void addIfTimedItemStack(ItemStack itemStack) {
+    public static void addIfTimedItemStack(AbstractContainerMenu containerMenu, int index) {
+        ItemStack itemStack = containerMenu.getItems().get(index);
         itemStack.getOrDefault(ModComponents.TIMED_ENCHANTMENTS.get(), TimedEnchantments.EMPTY).forEach((id, timedEnchantment) -> {
             if (!TimerSavedData.hasTimedEnchantmentId(id)) removeTimedEnchantment(itemStack, id, timedEnchantment);
         });
-        if (!itemStack.getOrDefault(ModComponents.TIMED_ENCHANTMENTS.get(), TimedEnchantments.EMPTY).isEmpty()) TIMED_ITEM_STACKS.add(itemStack);
+        if (itemStack.has(ModComponents.TIMED_ENCHANTMENTS.get())) {
+            Set<Integer> indices = TIMED_ITEM_STACKS.getOrDefault(containerMenu, new HashSet<>());
+            indices.add(index);
+            TIMED_ITEM_STACKS.put(containerMenu, indices);
+        }
     }
 
     public static boolean removeTimedEnchantment(ItemStack itemStack, int id, TimedEnchantment timedEnchantment) {
@@ -74,7 +83,7 @@ public class ModEvents {
         TimedEnchantments newTimedEnchantments = timedEnchantments.remove(id);
         if (newTimedEnchantments.isEmpty()) itemStack.remove(ModComponents.TIMED_ENCHANTMENTS.get());
         else itemStack.set(ModComponents.TIMED_ENCHANTMENTS.get(), newTimedEnchantments);
-        return newTimedEnchantments.isEmpty();
+        return !itemStack.has(ModComponents.TIMED_ENCHANTMENTS.get());
     }
 
     // Client Side Event
@@ -120,8 +129,8 @@ public class ModEvents {
     public static void onPlayerOpenContainer(final PlayerContainerEvent.Open event) {
         event.getContainer().addSlotListener(new TimerListener());
         event.getContainer().getItems().forEach(itemStack -> {
-            ModEvents.addIfTimedItemStack(itemStack);
-            ModEvents.addIfTimedStaff(itemStack);
+            ModEvents.addIfTimedItemStack(event.getContainer(), event.getContainer().getItems().indexOf(itemStack));
+            ModEvents.addIfTimedStaff(event.getContainer(), event.getContainer().getItems().indexOf(itemStack));
         });
     }
 
@@ -130,8 +139,8 @@ public class ModEvents {
         event.getEntity().inventoryMenu.addSlotListener(new StaffItemListener());
         event.getEntity().inventoryMenu.addSlotListener(new TimerListener());
         event.getEntity().inventoryMenu.getItems().forEach(itemStack -> {
-            ModEvents.addIfTimedItemStack(itemStack);
-            ModEvents.addIfTimedStaff(itemStack);
+            ModEvents.addIfTimedItemStack(event.getEntity().inventoryMenu, event.getEntity().inventoryMenu.getItems().indexOf(itemStack));
+            ModEvents.addIfTimedStaff(event.getEntity().inventoryMenu, event.getEntity().inventoryMenu.getItems().indexOf(itemStack));
         });
     }
 

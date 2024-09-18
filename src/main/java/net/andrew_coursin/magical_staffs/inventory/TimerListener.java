@@ -11,8 +11,8 @@ import javax.annotation.ParametersAreNonnullByDefault;
 public class TimerListener implements ContainerListener {
     @Override
     public void slotChanged(AbstractContainerMenu pContainerToSend, int pDataSlotIndex, ItemStack pStack) {
-        ModEvents.addIfTimedItemStack(pContainerToSend.getItems().get(pDataSlotIndex));
-        ModEvents.addIfTimedStaff(pContainerToSend.getItems().get(pDataSlotIndex));
+        ModEvents.addIfTimedItemStack(pContainerToSend, pDataSlotIndex);
+        ModEvents.addIfTimedStaff(pContainerToSend, pDataSlotIndex);
     }
 
     @Override
