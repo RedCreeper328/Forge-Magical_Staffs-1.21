@@ -16,12 +16,12 @@ public class StaffItemKeyBindC2SPacket {
 
     private final KEY_BINDS keyBind;
 
-    public StaffItemKeyBindC2SPacket(KEY_BINDS keyBind) {
-        this.keyBind = keyBind;
-    }
-
     public StaffItemKeyBindC2SPacket(FriendlyByteBuf buffer) {
         this.keyBind = buffer.readEnum(KEY_BINDS.class);
+    }
+
+    public StaffItemKeyBindC2SPacket(KEY_BINDS keyBind) {
+        this.keyBind = keyBind;
     }
 
     public void handle(CustomPayloadEvent.Context context) {

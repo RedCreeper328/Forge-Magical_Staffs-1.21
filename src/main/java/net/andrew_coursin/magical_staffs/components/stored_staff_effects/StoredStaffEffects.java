@@ -16,22 +16,38 @@ import java.util.Objects;
 import java.util.function.Function;
 
 public class StoredStaffEffects {
-    public enum Indices {LEVEL, POINTS, SLOTS}
-
-    private static final Codec<List<Integer>> ENCHANTMENT_VALUES_CODEC;
-    private static final Codec<List<Integer>> POTION_VALUES_CODEC;
-    private static final Codec<HashMap<Holder<Enchantment>, List<Integer>>> ENCHANTMENT_CODEC;
-    private static final Codec<HashMap<Holder<MobEffect>, List<Integer>>> POTION_CODEC;
-    private static final Codec<Integer> ENCHANTMENT_SLOTS_CODEC;
-    private static final Codec<Integer> POTION_SLOTS_CODEC;
-    public static final Codec<StoredStaffEffects> CODEC;
-    public static final StreamCodec<RegistryFriendlyByteBuf, StoredStaffEffects> STREAM_CODEC;
-    public static final StoredStaffEffects EMPTY = new StoredStaffEffects(new HashMap<>(), new HashMap<>(), 0, 0);
+    private static final Codec<List<Integer>> ENCHANTMENT_VALUES_CODEC = Codec.intRange(0, 255).listOf();
+    private static final Codec<List<Integer>> POTION_VALUES_CODEC = Codec.intRange(0, 255).listOf();
+    private static final Codec<HashMap<Holder<Enchantment>, List<Integer>>> ENCHANTMENT_CODEC = Codec.unboundedMap(Enchantment.CODEC, ENCHANTMENT_VALUES_CODEC).xmap(HashMap::new, Function.identity());
+    private static final Codec<HashMap<Holder<MobEffect>, List<Integer>>> POTION_CODEC = Codec.unboundedMap(MobEffect.CODEC, POTION_VALUES_CODEC).xmap(HashMap::new, Function.identity());
 
     protected HashMap<Holder<Enchantment>, List<Integer>> enchantments;
     protected HashMap<Holder<MobEffect>, List<Integer>> potions;
     protected int enchantmentSlots;
     protected int potionSlots;
+
+    public enum Indices {LEVEL, POINTS, SLOTS}
+
+    public static final Codec<StoredStaffEffects> CODEC = RecordCodecBuilder.create((instance) -> instance.group(
+            ENCHANTMENT_CODEC.fieldOf("enchantments").forGetter(storedStaffEffects -> storedStaffEffects.enchantments),
+            POTION_CODEC.fieldOf("potions").forGetter(storedStaffEffects -> storedStaffEffects.potions),
+            Codec.INT.fieldOf("enchantment_slots").forGetter(storedStaffEffects -> storedStaffEffects.enchantmentSlots),
+            Codec.INT.fieldOf("potion_slots").forGetter(storedStaffEffects -> storedStaffEffects.potionSlots)
+    ).apply(instance, StoredStaffEffects::new));
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, StoredStaffEffects> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.map(HashMap::new, Enchantment.STREAM_CODEC, ByteBufCodecs.fromCodec(Codec.intRange(0, 255).listOf())),
+            storedStaffEffects -> storedStaffEffects.enchantments,
+            ByteBufCodecs.map(HashMap::new, MobEffect.STREAM_CODEC, ByteBufCodecs.fromCodec(Codec.intRange(0, 255).listOf())),
+            storedStaffEffects -> storedStaffEffects.potions,
+            ByteBufCodecs.VAR_INT,
+            storedStaffEffects -> storedStaffEffects.enchantmentSlots,
+            ByteBufCodecs.VAR_INT,
+            storedStaffEffects -> storedStaffEffects.potionSlots,
+            StoredStaffEffects::new
+    );
+
+    public static final StoredStaffEffects EMPTY = new StoredStaffEffects(new HashMap<>(), new HashMap<>(), 0, 0);
 
     private StoredStaffEffects(HashMap<Holder<Enchantment>, List<Integer>> enchantments, HashMap<Holder<MobEffect>, List<Integer>> potions, int enchantmentSlots, int potionSlots) {
         this.enchantments = enchantments;
@@ -52,6 +68,10 @@ public class StoredStaffEffects {
         return this.potions.keySet().stream().toList().get(index);
     }
 
+    public int getUsedSlots(boolean isEnchantment) {
+        return isEnchantment ? this.enchantmentSlots : this.potionSlots;
+    }
+
     public int getValue(Either<Holder<Enchantment>, Holder<MobEffect>> effect, Indices index) {
         if (effect.left().isPresent()){
             return enchantments.getOrDefault(effect.left().get(), List.of(0, 0, 0)).get(index.ordinal());
@@ -65,43 +85,8 @@ public class StoredStaffEffects {
         return 0;
     }
 
-    public int getUsedSlots(boolean isEnchantment) {
-        return isEnchantment ? this.enchantmentSlots : this.potionSlots;
-    }
-
     public int size(boolean isEnchantment) {
        return isEnchantment ? this.enchantments.size() : this.potions.size();
-    }
-
-
-    static {
-        ENCHANTMENT_VALUES_CODEC = Codec.intRange(0, 255).listOf();
-        POTION_VALUES_CODEC = Codec.intRange(0, 255).listOf();
-        ENCHANTMENT_CODEC = Codec.unboundedMap(Enchantment.CODEC, ENCHANTMENT_VALUES_CODEC).xmap(HashMap::new, Function.identity());
-        POTION_CODEC = Codec.unboundedMap(MobEffect.CODEC, POTION_VALUES_CODEC).xmap(HashMap::new, Function.identity());
-        ENCHANTMENT_SLOTS_CODEC = Codec.INT;
-        POTION_SLOTS_CODEC = Codec.INT;
-
-        CODEC = RecordCodecBuilder.create((instance) ->
-            instance.group(
-                ENCHANTMENT_CODEC.fieldOf("enchantments").forGetter(storedStaffEffects -> storedStaffEffects.enchantments),
-                POTION_CODEC.fieldOf("potions").forGetter(storedStaffEffects -> storedStaffEffects.potions),
-                ENCHANTMENT_SLOTS_CODEC.fieldOf("enchantment_slots").forGetter(storedStaffEffects -> storedStaffEffects.enchantmentSlots),
-                POTION_SLOTS_CODEC.fieldOf("potion_slots").forGetter(storedStaffEffects -> storedStaffEffects.potionSlots)
-            ).apply(instance, StoredStaffEffects::new)
-        );
-
-        STREAM_CODEC = StreamCodec.composite(
-                ByteBufCodecs.map(HashMap::new, Enchantment.STREAM_CODEC, ByteBufCodecs.fromCodec(Codec.intRange(0, 255).listOf())),
-                storedStaffEffects -> storedStaffEffects.enchantments,
-                ByteBufCodecs.map(HashMap::new, MobEffect.STREAM_CODEC, ByteBufCodecs.fromCodec(Codec.intRange(0, 255).listOf())),
-                storedStaffEffects -> storedStaffEffects.potions,
-                ByteBufCodecs.VAR_INT,
-                storedStaffEffects -> storedStaffEffects.enchantmentSlots,
-                ByteBufCodecs.VAR_INT,
-                storedStaffEffects -> storedStaffEffects.potionSlots,
-                StoredStaffEffects::new
-        );
     }
 
     @Override
@@ -129,6 +114,10 @@ public class StoredStaffEffects {
             this.potions.putAll(storedStaffEffects.potions);
         }
 
+        public StoredStaffEffects toImmutable() {
+            return new StoredStaffEffects(this.enchantments, this.potions, this.enchantmentSlots, this.potionSlots);
+        }
+
         public void setEnchantmentValues(Holder<Enchantment> enchantment, List<Integer> values) {
             this.enchantmentSlots += values.get(Indices.SLOTS.ordinal()) - getValue(Either.left(enchantment), Indices.SLOTS);
             if (values.equals(List.of(0, 0, 0))) this.enchantments.remove(enchantment);
@@ -139,10 +128,6 @@ public class StoredStaffEffects {
             this.potionSlots += values.get(Indices.SLOTS.ordinal()) - getValue(Either.right(potion), Indices.SLOTS);
             if (values.equals(List.of(0, 0, 0))) this.potions.remove(potion);
             else this.potions.put(potion, values);
-        }
-
-        public StoredStaffEffects toImmutable() {
-            return new StoredStaffEffects(this.enchantments, this.potions, this.enchantmentSlots, this.potionSlots);
         }
     }
 }

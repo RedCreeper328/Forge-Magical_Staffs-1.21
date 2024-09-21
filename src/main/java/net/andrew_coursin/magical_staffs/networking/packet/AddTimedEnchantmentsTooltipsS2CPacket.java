@@ -13,14 +13,14 @@ public class AddTimedEnchantmentsTooltipsS2CPacket {
     private final List<Integer> list;
     private final int slot;
 
-    public AddTimedEnchantmentsTooltipsS2CPacket(List<Integer> pList, int pSlot) {
-        this.list = pList;
-        this.slot = pSlot;
+    public AddTimedEnchantmentsTooltipsS2CPacket(int slot, List<Integer> list) {
+        this.list = list;
+        this.slot = slot;
     }
 
-    public AddTimedEnchantmentsTooltipsS2CPacket(FriendlyByteBuf pBuffer) {
-        this.list = pBuffer.readCollection(ArrayList::new, FriendlyByteBuf::readInt);
-        this.slot = pBuffer.readByte();
+    public AddTimedEnchantmentsTooltipsS2CPacket(FriendlyByteBuf buffer) {
+        this.list = buffer.readCollection(ArrayList::new, FriendlyByteBuf::readInt);
+        this.slot = buffer.readByte();
     }
 
     public List<Integer> getList() {
@@ -41,8 +41,8 @@ public class AddTimedEnchantmentsTooltipsS2CPacket {
         context.setPacketHandled(true);
     }
 
-    public void toBytes(FriendlyByteBuf pBuffer) {
-        pBuffer.writeCollection(this.list, FriendlyByteBuf::writeInt);
-        pBuffer.writeByte(this.slot);
+    public void toBytes(FriendlyByteBuf buffer) {
+        buffer.writeCollection(this.list, FriendlyByteBuf::writeInt);
+        buffer.writeByte(this.slot);
     }
 }

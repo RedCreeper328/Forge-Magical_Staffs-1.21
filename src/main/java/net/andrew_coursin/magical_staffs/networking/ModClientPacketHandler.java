@@ -1,6 +1,6 @@
 package net.andrew_coursin.magical_staffs.networking;
 
-import net.andrew_coursin.magical_staffs.components.ModComponents;
+import net.andrew_coursin.magical_staffs.components.ModDataComponents;
 import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantments;
 import net.andrew_coursin.magical_staffs.networking.packet.AddTimedEnchantmentsTooltipsS2CPacket;
 import net.minecraft.client.Minecraft;
@@ -13,16 +13,8 @@ public class ModClientPacketHandler {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
         AbstractContainerMenu abstractContainerMenu = player.containerMenu instanceof CreativeModeInventoryScreen.ItemPickerMenu ? player.inventoryMenu : player.containerMenu;
-        TimedEnchantments timedEnchantments = abstractContainerMenu.getItems().get(packet.getSlot()).get(ModComponents.TIMED_ENCHANTMENTS.get());
+        TimedEnchantments timedEnchantments = abstractContainerMenu.getItems().get(packet.getSlot()).get(ModDataComponents.TIMED_ENCHANTMENTS.get());
         if (timedEnchantments == null) return;
         timedEnchantments.deserializeDurations(packet.getList());
     }
-
-//    public static void handleSetTimer(SetTimerS2CPacket packet) {
-//        LocalPlayer player = Minecraft.getInstance().player;
-//        if (player == null) return;
-//        player.getInventory().getItem(packet.getSlot()).getCapability(TimerCapabilityProvider.TIMER).ifPresent(
-//            timer -> timer.setTime(packet.getTime())
-//        );
-//    }
 }

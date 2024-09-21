@@ -2,7 +2,7 @@ package net.andrew_coursin.magical_staffs.crafting;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.andrew_coursin.magical_staffs.components.ModComponents;
+import net.andrew_coursin.magical_staffs.components.ModDataComponents;
 import net.andrew_coursin.magical_staffs.item.ModItems;
 import net.andrew_coursin.magical_staffs.item.custom.StaffItem;
 import net.andrew_coursin.magical_staffs.components.forge_material.ForgeMaterial;
@@ -28,9 +28,9 @@ import static net.andrew_coursin.magical_staffs.MagicalStaffs.MOD_ID;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class SmithingForgeRecipe implements SmithingRecipe {
-    final Ingredient template;
-    final Ingredient base;
     final Ingredient addition;
+    final Ingredient base;
+    final Ingredient template;
 
     public SmithingForgeRecipe(Ingredient pTemplate, Ingredient pBase, Ingredient pAddition) {
         this.template = pTemplate;
@@ -79,7 +79,7 @@ public class SmithingForgeRecipe implements SmithingRecipe {
 
         ForgeMaterial forgeMaterial = ForgeMaterials.getForgeMaterialFromIngredient(materialItemStack);
         resultItemStack.set(DataComponents.CUSTOM_NAME, Component.translatable("forge_material.magical_staffs.hover_name", Component.translatable(Util.makeDescriptionId("forge_material", ResourceLocation.fromNamespaceAndPath(MOD_ID, forgeMaterial.name()))), Component.translatable(resultItemStack.getDescriptionId())).withStyle(forgeMaterial.style()));
-        resultItemStack.set(ModComponents.FORGE_MATERIAL.get(), forgeMaterial);
+        resultItemStack.set(ModDataComponents.FORGE_MATERIAL.get(), forgeMaterial);
         return staffItem.canForge(resultItemStack) ? resultItemStack : ItemStack.EMPTY;
     }
 
@@ -96,6 +96,16 @@ public class SmithingForgeRecipe implements SmithingRecipe {
     }
 
     public static class Serializer implements RecipeSerializer<SmithingForgeRecipe> {
+        private static final MapCodec<SmithingForgeRecipe> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+                Ingredient.CODEC.fieldOf("template").forGetter(smithingForgeRecipe -> smithingForgeRecipe.template),
+                Ingredient.CODEC.fieldOf("base").forGetter(smithingForgeRecipe -> smithingForgeRecipe.base),
+                Ingredient.CODEC.fieldOf("addition").forGetter(smithingForgeRecipe -> smithingForgeRecipe.addition)
+        ).apply(instance, SmithingForgeRecipe::new));
+
+        public static final StreamCodec<RegistryFriendlyByteBuf, SmithingForgeRecipe> STREAM_CODEC = StreamCodec.of(
+                SmithingForgeRecipe.Serializer::toNetwork, SmithingForgeRecipe.Serializer::fromNetwork
+        );
+
         private static SmithingForgeRecipe fromNetwork(RegistryFriendlyByteBuf pBuffer) {
             Ingredient template = Ingredient.CONTENTS_STREAM_CODEC.decode(pBuffer);
             Ingredient base = Ingredient.CONTENTS_STREAM_CODEC.decode(pBuffer);
@@ -108,18 +118,6 @@ public class SmithingForgeRecipe implements SmithingRecipe {
             Ingredient.CONTENTS_STREAM_CODEC.encode(pBuffer, pRecipe.base);
             Ingredient.CONTENTS_STREAM_CODEC.encode(pBuffer, pRecipe.addition);
         }
-
-        private static final MapCodec<SmithingForgeRecipe> CODEC = RecordCodecBuilder.mapCodec(instance ->
-            instance.group(
-                Ingredient.CODEC.fieldOf("template").forGetter(smithingForgeRecipe -> smithingForgeRecipe.template),
-                Ingredient.CODEC.fieldOf("base").forGetter(smithingForgeRecipe -> smithingForgeRecipe.base),
-                Ingredient.CODEC.fieldOf("addition").forGetter(smithingForgeRecipe -> smithingForgeRecipe.addition)
-            ).apply(instance, SmithingForgeRecipe::new)
-        );
-
-        public static final StreamCodec<RegistryFriendlyByteBuf, SmithingForgeRecipe> STREAM_CODEC = StreamCodec.of(
-                SmithingForgeRecipe.Serializer::toNetwork, SmithingForgeRecipe.Serializer::fromNetwork
-        );
 
         @Override
         public MapCodec<SmithingForgeRecipe> codec() {

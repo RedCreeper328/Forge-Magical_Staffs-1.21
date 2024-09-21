@@ -15,20 +15,38 @@ import java.util.Objects;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class TimedEnchantment {
-    private final Holder<Enchantment> enchantment;
     private int duration;
+    private final Holder<Enchantment> enchantment;
     private final int level;
-    public static final Codec<TimedEnchantment> CODEC;
-    public static final StreamCodec<RegistryFriendlyByteBuf, TimedEnchantment> STREAM_CODEC;
 
-    public TimedEnchantment(Holder<Enchantment> pEnchantment, int pDuration, int pLevel) {
-        this.duration = pDuration;
-        this.enchantment = pEnchantment;
-        this.level = pLevel;
+    public static final Codec<TimedEnchantment> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Enchantment.CODEC.fieldOf("enchantment").forGetter(timedEnchantment -> timedEnchantment.enchantment),
+            Codec.INT.fieldOf("duration").forGetter(timedEnchantment -> timedEnchantment.duration),
+            Codec.intRange(0, 255).fieldOf("level").forGetter(timedEnchantment -> timedEnchantment.level)
+    ).apply(instance, TimedEnchantment::new));
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, TimedEnchantment> STREAM_CODEC = StreamCodec.composite(
+            Enchantment.STREAM_CODEC,
+            timedEnchantment -> timedEnchantment.enchantment,
+            ByteBufCodecs.VAR_INT,
+            timedEnchantment -> timedEnchantment.duration,
+            ByteBufCodecs.VAR_INT,
+            timedEnchantment -> timedEnchantment.level,
+            TimedEnchantment::new
+    );
+
+    public TimedEnchantment(Holder<Enchantment> enchantment, int duration, int level) {
+        this.duration = duration;
+        this.enchantment = enchantment;
+        this.level = level;
 
         if (this.level < 0 || this.level > 255) {
             throw new IllegalArgumentException("Timed enchantment has invalid level " + this.level);
         }
+    }
+
+    public boolean tick() {
+        return this.duration-- <= 0;
     }
 
     public Holder<Enchantment> getEnchantment() {
@@ -47,11 +65,6 @@ public class TimedEnchantment {
         this.duration = duration;
     }
 
-    public boolean tick() {
-        this.duration--;
-        return duration <= 0;
-    }
-
     @Override
     public boolean equals(Object pOther) {
         if (this == pOther) return true;
@@ -64,25 +77,5 @@ public class TimedEnchantment {
     @Override
     public int hashCode() {
         return Objects.hash(this.duration, this.enchantment, this.level);
-    }
-
-    static {
-        CODEC = RecordCodecBuilder.create(instance ->
-            instance.group(
-                Enchantment.CODEC.fieldOf("enchantment").forGetter(timedEnchantment -> timedEnchantment.enchantment),
-                Codec.INT.fieldOf("duration").forGetter(timedEnchantment -> timedEnchantment.duration),
-                Codec.intRange(0, 255).fieldOf("level").forGetter(timedEnchantment -> timedEnchantment.level)
-            ).apply(instance, TimedEnchantment::new)
-        );
-
-        STREAM_CODEC = StreamCodec.composite(
-                Enchantment.STREAM_CODEC,
-                timedEnchantment -> timedEnchantment.enchantment,
-                ByteBufCodecs.VAR_INT,
-                timedEnchantment -> timedEnchantment.duration,
-                ByteBufCodecs.VAR_INT,
-                timedEnchantment -> timedEnchantment.level,
-                TimedEnchantment::new
-        );
     }
 }

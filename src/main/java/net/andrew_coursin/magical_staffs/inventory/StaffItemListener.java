@@ -1,6 +1,6 @@
 package net.andrew_coursin.magical_staffs.inventory;
 
-import net.andrew_coursin.magical_staffs.components.ModComponents;
+import net.andrew_coursin.magical_staffs.components.ModDataComponents;
 import net.andrew_coursin.magical_staffs.components.staff_modes.StaffModes;
 import net.andrew_coursin.magical_staffs.item.custom.StaffItem;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -22,7 +22,7 @@ public class StaffItemListener implements ContainerListener {
         if (!(pContainerToSend instanceof InventoryMenu inventoryMenu)) return;
         inventoryMenu.getItems().forEach(itemStack -> {
             if (!(itemStack.getItem() instanceof StaffItem)) return;
-            StaffModes staffModes = itemStack.get(ModComponents.STAFF_MODES.get());
+            StaffModes staffModes = itemStack.get(ModDataComponents.STAFF_MODES.get());
             if (staffModes != null) staffModes.reset(true);
         });
     }

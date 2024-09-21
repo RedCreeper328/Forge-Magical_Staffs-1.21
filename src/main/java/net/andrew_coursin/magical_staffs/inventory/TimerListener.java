@@ -10,13 +10,13 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @ParametersAreNonnullByDefault
 public class TimerListener implements ContainerListener {
     @Override
-    public void slotChanged(AbstractContainerMenu pContainerToSend, int pDataSlotIndex, ItemStack pStack) {
-        ModEvents.addIfTimedItemStack(pContainerToSend, pDataSlotIndex);
-        ModEvents.addIfTimedStaff(pContainerToSend, pDataSlotIndex);
+    public void dataChanged(AbstractContainerMenu pContainerMenu, int pDataSlotIndex, int pValue) {
+
     }
 
     @Override
-    public void dataChanged(AbstractContainerMenu pContainerMenu, int pDataSlotIndex, int pValue) {
-
+    public void slotChanged(AbstractContainerMenu pContainerToSend, int pDataSlotIndex, ItemStack pStack) {
+        ModEvents.addIfTimedItemStack(pContainerToSend, pDataSlotIndex);
+        ModEvents.addIfTimedStaff(pContainerToSend, pDataSlotIndex);
     }
 }

@@ -1,7 +1,7 @@
 package net.andrew_coursin.magical_staffs.item.custom;
 
 import com.mojang.datafixers.util.Either;
-import net.andrew_coursin.magical_staffs.components.ModComponents;
+import net.andrew_coursin.magical_staffs.components.ModDataComponents;
 import net.andrew_coursin.magical_staffs.components.staff_modes.StaffModes;
 import net.andrew_coursin.magical_staffs.components.stored_staff_effects.StoredStaffEffects;
 import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantments;
@@ -58,12 +58,12 @@ public class StaffItem extends Item {
     private final int maxPotionSlots;
 
     // Constructor method
-    public StaffItem(int pActiveDuration, int pCoolDownFactor, int pMaxEnchantmentSlots, int pMaxPotionSlots, Properties properties) {
+    public StaffItem(int activeDuration, int coolDownFactor, int maxEnchantmentSlots, int maxPotionSlots, Properties properties) {
         super(properties);
-        this.activeDuration = pActiveDuration;
-        this.coolDownFactor = pCoolDownFactor;
-        this.maxEnchantmentSlots = pMaxEnchantmentSlots;
-        this.maxPotionSlots = pMaxPotionSlots;
+        this.activeDuration = activeDuration;
+        this.coolDownFactor = coolDownFactor;
+        this.maxEnchantmentSlots = maxEnchantmentSlots;
+        this.maxPotionSlots = maxPotionSlots;
     }
 
     // Private methods
@@ -89,7 +89,7 @@ public class StaffItem extends Item {
         else storedStaffEffects.setPotionValues(staffModes.getPotion(), List.of(staffModes.getNewStaffLevel(), staffModes.getNewStaffPoints(), staffModes.getNewStaffSlots()));
 
         // Apply the updated values to the item stack
-        staffItemStack.set(ModComponents.STORED_STAFF_EFFECTS.get(), storedStaffEffects.toImmutable());
+        staffItemStack.set(ModDataComponents.STORED_STAFF_EFFECTS.get(), storedStaffEffects.toImmutable());
 
         // Update the other item tag or player effect to the new level
         if (isEnchantment) absorbEnchantment(otherItemStack, player, staffModes);
@@ -127,7 +127,7 @@ public class StaffItem extends Item {
         else storedStaffEffects.setPotionValues(staffModes.getPotion(), List.of(staffModes.getNewStaffLevel(), staffModes.getNewStaffPoints(), staffModes.getNewStaffSlots()));
 
         // Apply the updated values to the item stack
-        staffItemStack.set(ModComponents.STORED_STAFF_EFFECTS.get(), storedStaffEffects.toImmutable());
+        staffItemStack.set(ModDataComponents.STORED_STAFF_EFFECTS.get(), storedStaffEffects.toImmutable());
 
         // Increase the effect level
         if (isEnchantment) infuseEnchantment(otherItemStack, staffModes, player);
@@ -166,7 +166,7 @@ public class StaffItem extends Item {
 
         // Add a cooldown timer to the staff
         int staffTimerId = TimerSavedData.addStaffTimer(getCooldownDuration(staffItemStack));
-        staffItemStack.set(ModComponents.STAFF_TIMER.get(), staffTimerId);
+        staffItemStack.set(ModDataComponents.STAFF_TIMER.get(), staffTimerId);
         return true;
     }
 
@@ -325,8 +325,8 @@ public class StaffItem extends Item {
                 itemStack.enchant(enchantment, newLevel);
 
                 // Add the timed enchantment
-                TimedEnchantments timedEnchantments = itemStack.getOrDefault(ModComponents.TIMED_ENCHANTMENTS.get(), TimedEnchantments.EMPTY);
-                itemStack.set(ModComponents.TIMED_ENCHANTMENTS.get(), timedEnchantments.add(timedEnchantmentId, timedEnchantment));
+                TimedEnchantments timedEnchantments = itemStack.getOrDefault(ModDataComponents.TIMED_ENCHANTMENTS.get(), TimedEnchantments.EMPTY);
+                itemStack.set(ModDataComponents.TIMED_ENCHANTMENTS.get(), timedEnchantments.add(timedEnchantmentId, timedEnchantment));
             }
         }
     }
@@ -342,9 +342,7 @@ public class StaffItem extends Item {
             if (potion.get().isBeneficial()) {
                 MobEffectInstance mobEffectInstance = player.getEffect(potion);
                 player.addEffect(new MobEffectInstance(potion, getActiveDuration(staffItemStack), amplifier + (mobEffectInstance != null ? mobEffectInstance.getAmplifier() + 1 : 0)));
-            } else if (attackMobEffect != null) {
-                player.addEffect(new AttackMobEffectInstance(attackMobEffect, getActiveDuration(staffItemStack), amplifier));
-            }
+            } else if (attackMobEffect != null) player.addEffect(new AttackMobEffectInstance(attackMobEffect, amplifier, getActiveDuration(staffItemStack)));
         }
     }
 
@@ -444,7 +442,7 @@ public class StaffItem extends Item {
         staffModes.setNewStaffSlots((int) Math.ceil(inverse));
 
         // Add the updated staff modes to the staff item stack
-        staffItemStack.set(ModComponents.STAFF_MODES.get(), staffModes);
+        staffItemStack.set(ModDataComponents.STAFF_MODES.get(), staffModes);
 
         // Create translatable components and message the player
         String pKey = isEnchantment ? "enchantment.level." : "potion.potency.";
@@ -520,7 +518,7 @@ public class StaffItem extends Item {
         staffModes.setNewStaffSlots((int) Math.ceil(inverse));
 
         // Add the updated staff modes to the staff item stack
-        staffItemStack.set(ModComponents.STAFF_MODES.get(), staffModes);
+        staffItemStack.set(ModDataComponents.STAFF_MODES.get(), staffModes);
 
         // Create translatable components and message the player
         String pKey = isEnchantment ? "enchantment.level." : "potion.potency.";
@@ -532,7 +530,7 @@ public class StaffItem extends Item {
 
     // Private static methods
     private static ForgeMaterial getForgeMaterial(ItemStack staffItemStack) {
-        return staffItemStack.getOrDefault(ModComponents.FORGE_MATERIAL.get(), ForgeMaterials.NONE);
+        return staffItemStack.getOrDefault(ModDataComponents.FORGE_MATERIAL.get(), ForgeMaterials.NONE);
     }
 
     private static int getEnchantmentLevel(Holder<Enchantment> enchantment, ItemStack otherItemStack) {
@@ -570,7 +568,7 @@ public class StaffItem extends Item {
     }
 
     private static StoredStaffEffects getStoredEffects(ItemStack staffItemStack) {
-        return staffItemStack.getOrDefault(ModComponents.STORED_STAFF_EFFECTS.get(), StoredStaffEffects.EMPTY);
+        return staffItemStack.getOrDefault(ModDataComponents.STORED_STAFF_EFFECTS.get(), StoredStaffEffects.EMPTY);
     }
 
     private static void message(boolean debug, Player player, String string) {
@@ -584,7 +582,7 @@ public class StaffItem extends Item {
     }
 
     public void useKeyBind(ItemStack otherItemStack, ItemStack staffItemStack, Player player, StaffItemKeyBindC2SPacket.KEY_BINDS keyBind) {
-        StaffModes staffModes = staffItemStack.getOrDefault(ModComponents.STAFF_MODES.get(), new StaffModes());
+        StaffModes staffModes = staffItemStack.getOrDefault(ModDataComponents.STAFF_MODES.get(), new StaffModes());
         switch(keyBind) {
             case CYCLE_FORWARD:
                 switch(staffModes.getMode()) {
@@ -640,7 +638,7 @@ public class StaffItem extends Item {
     // Override public methods
     @Override
     public boolean isFoil(ItemStack pStack) {
-        return !pStack.has(ModComponents.STAFF_TIMER.get());
+        return !pStack.has(ModDataComponents.STAFF_TIMER.get());
     }
 
     @Override
@@ -657,15 +655,15 @@ public class StaffItem extends Item {
         pPlayer.startUsingItem(pUsedHand);
 
         if (!this.isFoil(staffItemStack)) {
-            Integer staffTimer = staffItemStack.get(ModComponents.STAFF_TIMER.get());
+            Integer staffTimer = staffItemStack.get(ModDataComponents.STAFF_TIMER.get());
             if (staffTimer == null) return InteractionResultHolder.consume(staffItemStack);
             int time = TimerSavedData.getStaffTimer(staffTimer);
             message(false, pPlayer, Component.translatable("message.magical_staffs.on_cool_down", StringUtil.formatTickDuration(time, pLevel.tickRateManager().tickrate())).getString());
             return InteractionResultHolder.consume(staffItemStack);
         }
 
-        StaffModes staffModes = staffItemStack.getOrDefault(ModComponents.STAFF_MODES.get(), new StaffModes());
-        if (!staffItemStack.has(ModComponents.STAFF_MODES.get())) staffItemStack.set(ModComponents.STAFF_MODES.get(), staffModes);
+        StaffModes staffModes = staffItemStack.getOrDefault(ModDataComponents.STAFF_MODES.get(), new StaffModes());
+        if (!staffItemStack.has(ModDataComponents.STAFF_MODES.get())) staffItemStack.set(ModDataComponents.STAFF_MODES.get(), staffModes);
         if (pPlayer.isSecondaryUseActive()) cycleMode(pPlayer, staffModes);
         else if (useMode(otherItemStack, staffItemStack, pPlayer, (ServerLevel) pLevel, staffModes)) pPlayer.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
 

@@ -7,12 +7,10 @@ import net.minecraft.world.effect.MobEffectInstance;
 public class AttackMobEffectInstance extends MobEffectInstance {
     private MobEffectInstance appliedMobEffectInstance;
 
-    public AttackMobEffectInstance(Holder<MobEffect> mobEffect, int duration, int amplifier) {
+    public AttackMobEffectInstance(Holder<MobEffect> mobEffect, int amplifier, int duration) {
         super(mobEffect, duration, amplifier);
 
-        if (mobEffect.get() instanceof AttackMobEffect attackMobEffect) {
-            this.appliedMobEffectInstance = new MobEffectInstance(attackMobEffect.getAppliedEffect(), duration / 20, amplifier);
-        }
+        if (mobEffect.get() instanceof AttackMobEffect attackMobEffect) this.appliedMobEffectInstance = new MobEffectInstance(attackMobEffect.getAppliedEffect(), duration / 20, amplifier);
     }
 
     public MobEffectInstance getAppliedMobEffectInstance() {

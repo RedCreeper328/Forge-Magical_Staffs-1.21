@@ -19,67 +19,59 @@ import java.util.*;
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
 public class TimerSavedData extends SavedData {
-    public static final String FILE_NAME = "magical_staffs_timers";
-    private Map<Integer, Integer> staffTimers = new HashMap<>();
-    private Map<Integer, TimedEnchantment> timedEnchantments = new HashMap<>();
-    private static final Codec<Map<Integer, Integer>> STAFF_TIMERS_MAP_CODEC;
-    private static final Codec<Map<Integer, TimedEnchantment>> TIMED_ENCHANTMENTS_MAP_CODEC;
-    private static ServerLevel SERVER_LEVEL;
     private int STAFF_TIMERS_MAX_ID = 0;
     private int TIMED_ENCHANTMENTS_MAX_ID = 0;
+    private Map<Integer, Integer> staffTimers = new HashMap<>();
+    private Map<Integer, TimedEnchantment> timedEnchantments = new HashMap<>();
 
-    static {
-        STAFF_TIMERS_MAP_CODEC = Codec.pair(Codec.INT.fieldOf("id").codec(), Codec.INT.fieldOf("time").codec()).listOf().xmap(
-                // Function to go from List<Pair<Integer, StaffTimer>> to Map<Integer, StaffTimer>
-                (list) -> {
-                    Map<Integer, Integer> map = new HashMap<>();
-                    list.forEach(pair -> map.put(pair.getFirst(), pair.getSecond()));
-                    return map;
-                },
-                // Function to go from Map<Integer, StaffTimer> to List<Pair<Integer, StaffTimer>>
-                (map) -> {
-                    List<Pair<Integer, Integer>> list = new ArrayList<>();
-                    map.forEach((id, staffTimer) -> list.add(new Pair<>(id, staffTimer)));
-                    return list;
-                }
-        );
+    private static ServerLevel SERVER_LEVEL;
 
-        TIMED_ENCHANTMENTS_MAP_CODEC = Codec.pair(Codec.INT.fieldOf("id").codec(), TimedEnchantment.CODEC.fieldOf("timed_enchantment").codec()).listOf().xmap(
-                // Function to go from List<Pair<Integer, TimedEnchantment>> to Map<Integer, TimedEnchantment>
-                (list) -> {
-                    Map<Integer, TimedEnchantment> map = new HashMap<>();
-                    list.forEach(pair -> map.put(pair.getFirst(), pair.getSecond()));
-                    return map;
-                },
-                // Function to go from Map<Integer, TimedEnchantment> to List<Pair<Integer, TimedEnchantment>>
-                (map) -> {
-                    List<Pair<Integer, TimedEnchantment>> list = new ArrayList<>();
-                    map.forEach((id, timedEnchantment) -> list.add(new Pair<>(id, timedEnchantment)));
-                    return list;
-                }
-        );
-    }
+    private static final Codec<Map<Integer, Integer>> STAFF_TIMERS_MAP_CODEC = Codec.pair(Codec.INT.fieldOf("id").codec(), Codec.INT.fieldOf("time").codec()).listOf().xmap(
+            // Function to go from List<Pair<Integer, StaffTimer>> to Map<Integer, StaffTimer>
+            (list) -> {
+                Map<Integer, Integer> map = new HashMap<>();
+                list.forEach(pair -> map.put(pair.getFirst(), pair.getSecond()));
+                return map;
+            },
+            // Function to go from Map<Integer, StaffTimer> to List<Pair<Integer, StaffTimer>>
+            (map) -> {
+                List<Pair<Integer, Integer>> list = new ArrayList<>();
+                map.forEach((id, staffTimer) -> list.add(new Pair<>(id, staffTimer)));
+                return list;
+            }
+    );
+
+    private static final Codec<Map<Integer, TimedEnchantment>> TIMED_ENCHANTMENTS_MAP_CODEC = Codec.pair(Codec.INT.fieldOf("id").codec(), TimedEnchantment.CODEC.fieldOf("timed_enchantment").codec()).listOf().xmap(
+            // Function to go from List<Pair<Integer, TimedEnchantment>> to Map<Integer, TimedEnchantment>
+            (list) -> {
+                Map<Integer, TimedEnchantment> map = new HashMap<>();
+                list.forEach(pair -> map.put(pair.getFirst(), pair.getSecond()));
+                return map;
+            },
+            // Function to go from Map<Integer, TimedEnchantment> to List<Pair<Integer, TimedEnchantment>>
+            (map) -> {
+                List<Pair<Integer, TimedEnchantment>> list = new ArrayList<>();
+                map.forEach((id, timedEnchantment) -> list.add(new Pair<>(id, timedEnchantment)));
+                return list;
+            }
+    );
+
+    public static final String FILE_NAME = "magical_staffs_timers";
 
     public TimerSavedData(ServerLevel serverLevel) {
         SERVER_LEVEL = serverLevel;
     }
 
-    public static SavedData.Factory<TimerSavedData> factory(ServerLevel serverLevel) {
-        return new SavedData.Factory<>(() -> new TimerSavedData(serverLevel), (compoundTag, provider) -> load(serverLevel, compoundTag, provider), null);
-    }
-
-    public static TimerSavedData load(ServerLevel serverLevel, CompoundTag pCompoundTag, HolderLookup.Provider pRegistries) {
-        TimerSavedData timerSavedData = new TimerSavedData(serverLevel);
-        timerSavedData.STAFF_TIMERS_MAX_ID = pCompoundTag.getInt("StaffTimersMaxID");
-        timerSavedData.TIMED_ENCHANTMENTS_MAX_ID = pCompoundTag.getInt("TimedEnchantmentsMaxID");
-        RegistryOps<Tag> registryops = pRegistries.createSerializationContext(NbtOps.INSTANCE);
-        timerSavedData.staffTimers = STAFF_TIMERS_MAP_CODEC.decode(registryops, pCompoundTag.get("StaffTimers")).getOrThrow().getFirst();
-        timerSavedData.timedEnchantments = TIMED_ENCHANTMENTS_MAP_CODEC.decode(registryops, pCompoundTag.get("TimedEnchantments")).getOrThrow().getFirst();
-        return timerSavedData;
-    }
-
     private static TimerSavedData getInstance() {
         return SERVER_LEVEL.getDataStorage().computeIfAbsent(factory(SERVER_LEVEL), FILE_NAME);
+    }
+
+    public static boolean hasStaffTimerId(int id) {
+        return getInstance().staffTimers.containsKey(id);
+    }
+
+    public static boolean hasTimedEnchantmentId(int id) {
+        return getInstance().timedEnchantments.containsKey(id);
     }
 
     public static int addStaffTimer(int time) {
@@ -96,20 +88,26 @@ public class TimerSavedData extends SavedData {
         return id;
     }
 
-    public static boolean hasStaffTimerId(int id) {
-        return getInstance().staffTimers.containsKey(id);
-    }
-
-    public static boolean hasTimedEnchantmentId(int id) {
-        return getInstance().timedEnchantments.containsKey(id);
-    }
-
     public static int getStaffTimer(int id) {
         return getInstance().staffTimers.getOrDefault(id, 0);
     }
 
+    public static SavedData.Factory<TimerSavedData> factory(ServerLevel serverLevel) {
+        return new SavedData.Factory<>(() -> new TimerSavedData(serverLevel), (compoundTag, provider) -> load(compoundTag, provider, serverLevel), null);
+    }
+
     public static TimedEnchantment getTimedEnchantment(int id) {
         return getInstance().timedEnchantments.get(id);
+    }
+
+    public static TimerSavedData load(CompoundTag compoundTag, HolderLookup.Provider registries, ServerLevel serverLevel) {
+        TimerSavedData timerSavedData = new TimerSavedData(serverLevel);
+        timerSavedData.STAFF_TIMERS_MAX_ID = compoundTag.getInt("StaffTimersMaxID");
+        timerSavedData.TIMED_ENCHANTMENTS_MAX_ID = compoundTag.getInt("TimedEnchantmentsMaxID");
+        RegistryOps<Tag> registryops = registries.createSerializationContext(NbtOps.INSTANCE);
+        timerSavedData.staffTimers = STAFF_TIMERS_MAP_CODEC.decode(registryops, compoundTag.get("StaffTimers")).getOrThrow().getFirst();
+        timerSavedData.timedEnchantments = TIMED_ENCHANTMENTS_MAP_CODEC.decode(registryops, compoundTag.get("TimedEnchantments")).getOrThrow().getFirst();
+        return timerSavedData;
     }
 
     public static void tick() {
@@ -126,13 +124,13 @@ public class TimerSavedData extends SavedData {
         // Removes any staff timers that have ended
         removedStaffTimers.forEach((id, time) -> {
             getInstance().staffTimers.remove(id, time);
-            ModEvents.TIMED_STAFFS.forEach((containerMenu, indices) -> indices.removeIf(index -> ModEvents.removeStaffTimer(containerMenu.getItems().get(index), id)));
+            ModEvents.TIMED_STAFFS.forEach((containerMenu, indices) -> indices.removeIf(index -> ModEvents.removeStaffTimer(id, containerMenu.getItems().get(index))));
         });
 
         // Removes any timed enchantments that have ended
         removedTimedEnchantments.forEach((id, timedEnchantment) -> {
             getInstance().timedEnchantments.remove(id, timedEnchantment);
-            ModEvents.TIMED_ITEM_STACKS.forEach((containerMenu, indices) -> indices.removeIf(index -> ModEvents.removeTimedEnchantment(containerMenu.getItems().get(index), id, timedEnchantment)));
+            ModEvents.TIMED_ITEM_STACKS.forEach((containerMenu, indices) -> indices.removeIf(index -> ModEvents.removeTimedEnchantment(id, containerMenu.getItems().get(index), timedEnchantment)));
         });
     }
 

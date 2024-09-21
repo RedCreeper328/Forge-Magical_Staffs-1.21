@@ -25,7 +25,7 @@ import static net.andrew_coursin.magical_staffs.MagicalStaffs.MOD_ID;
 @ParametersAreNonnullByDefault
 public class ModItems {
     // Create a Deferred Register to hold Items which will all be registered under the "magical_staffs" namespace
-    public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);
+    private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MOD_ID);
 
     public static final RegistryObject<SmithingTemplateItem> FORGE_UPGRADE_SMITHING_TEMPLATE = ITEMS.register("forge_upgrade_smithing_template", ModItems::createForgeUpgradeTemplate);
 

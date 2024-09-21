@@ -1,7 +1,7 @@
 package net.andrew_coursin.magical_staffs;
 
 import com.mojang.logging.LogUtils;
-import net.andrew_coursin.magical_staffs.components.ModComponents;
+import net.andrew_coursin.magical_staffs.components.ModDataComponents;
 import net.andrew_coursin.magical_staffs.crafting.SmithingForgeRecipe;
 import net.andrew_coursin.magical_staffs.effect.ModEffects;
 import net.andrew_coursin.magical_staffs.item.ModItems;
@@ -30,7 +30,7 @@ public class MagicalStaffs
         IEventBus modEventBus = context.getModEventBus();
 
         // Register mod registries
-        ModComponents.register(modEventBus);
+        ModDataComponents.register(modEventBus);
         ModEffects.register(modEventBus);
         ModItems.register(modEventBus);
         ModLootModifiers.register(modEventBus);

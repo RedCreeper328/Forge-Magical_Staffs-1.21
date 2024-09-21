@@ -16,12 +16,6 @@ public class ModPacketHandler {
     public static void register() {
         INSTANCE = ChannelBuilder.named(MagicalStaffs.MOD_ID).simpleChannel();
 
-        INSTANCE.messageBuilder(StaffItemKeyBindC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(StaffItemKeyBindC2SPacket::new)
-                .encoder(StaffItemKeyBindC2SPacket::toBytes)
-                .consumerMainThread(StaffItemKeyBindC2SPacket::handle)
-                .add();
-
         INSTANCE.messageBuilder(AddTimedEnchantmentsTooltipsC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(AddTimedEnchantmentsTooltipsC2SPacket::new)
                 .encoder(AddTimedEnchantmentsTooltipsC2SPacket::toBytes)
@@ -34,11 +28,11 @@ public class ModPacketHandler {
                 .consumerMainThread(AddTimedEnchantmentsTooltipsS2CPacket::handle)
                 .add();
 
-//        INSTANCE.messageBuilder(SetTimerS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-//                .decoder(SetTimerS2CPacket::new)
-//                .encoder(SetTimerS2CPacket::toBytes)
-//                .consumerMainThread(SetTimerS2CPacket::handle)
-//                .add();
+        INSTANCE.messageBuilder(StaffItemKeyBindC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(StaffItemKeyBindC2SPacket::new)
+                .encoder(StaffItemKeyBindC2SPacket::toBytes)
+                .consumerMainThread(StaffItemKeyBindC2SPacket::handle)
+                .add();
     }
 
     public static <MSG> void sendToPlayer(MSG message, ServerPlayer player) {

@@ -1,7 +1,7 @@
 package net.andrew_coursin.magical_staffs.event;
 
 import net.andrew_coursin.magical_staffs.MagicalStaffs;
-import net.andrew_coursin.magical_staffs.components.ModComponents;
+import net.andrew_coursin.magical_staffs.components.ModDataComponents;
 import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantment;
 import net.andrew_coursin.magical_staffs.components.timed_enchantments.TimedEnchantments;
 import net.andrew_coursin.magical_staffs.effect.AttackMobEffectInstance;
@@ -42,37 +42,14 @@ public class ModEvents {
     public static final Map<AbstractContainerMenu, Set<Integer>> TIMED_ITEM_STACKS = new HashMap<>();
     public static final Map<AbstractContainerMenu, Set<Integer>> TIMED_STAFFS = new HashMap<>();
 
-    public static void addIfTimedStaff(AbstractContainerMenu containerMenu, int index) {
-        ItemStack itemStack = containerMenu.getItems().get(index);
-        Integer id = itemStack.get(ModComponents.STAFF_TIMER.get());
-        if (id != null && !TimerSavedData.hasStaffTimerId(id)) removeStaffTimer(itemStack, id);
-        else if (itemStack.has(ModComponents.STAFF_TIMER.get())) {
-            Set<Integer> indices = TIMED_STAFFS.getOrDefault(containerMenu, new HashSet<>());
-            indices.add(index);
-            TIMED_STAFFS.put(containerMenu, indices);
-        }
+    public static boolean removeStaffTimer(int id, ItemStack itemStack) {
+        Integer staffTimer = itemStack.get(ModDataComponents.STAFF_TIMER.get());
+        if (staffTimer != null && staffTimer == id) itemStack.remove(ModDataComponents.STAFF_TIMER.get());
+        return !itemStack.has(ModDataComponents.STAFF_TIMER.get());
     }
 
-    public static boolean removeStaffTimer(ItemStack itemStack, int id) {
-        Integer staffTimer = itemStack.get(ModComponents.STAFF_TIMER.get());
-        if (staffTimer != null && staffTimer == id) itemStack.remove(ModComponents.STAFF_TIMER.get());
-        return !itemStack.has(ModComponents.STAFF_TIMER.get());
-    }
-
-    public static void addIfTimedItemStack(AbstractContainerMenu containerMenu, int index) {
-        ItemStack itemStack = containerMenu.getItems().get(index);
-        itemStack.getOrDefault(ModComponents.TIMED_ENCHANTMENTS.get(), TimedEnchantments.EMPTY).forEach((id, timedEnchantment) -> {
-            if (!TimerSavedData.hasTimedEnchantmentId(id)) removeTimedEnchantment(itemStack, id, timedEnchantment);
-        });
-        if (itemStack.has(ModComponents.TIMED_ENCHANTMENTS.get())) {
-            Set<Integer> indices = TIMED_ITEM_STACKS.getOrDefault(containerMenu, new HashSet<>());
-            indices.add(index);
-            TIMED_ITEM_STACKS.put(containerMenu, indices);
-        }
-    }
-
-    public static boolean removeTimedEnchantment(ItemStack itemStack, int id, TimedEnchantment timedEnchantment) {
-        TimedEnchantments timedEnchantments = itemStack.getOrDefault(ModComponents.TIMED_ENCHANTMENTS.get(), TimedEnchantments.EMPTY);
+    public static boolean removeTimedEnchantment(int id, ItemStack itemStack, TimedEnchantment timedEnchantment) {
+        TimedEnchantments timedEnchantments = itemStack.getOrDefault(ModDataComponents.TIMED_ENCHANTMENTS.get(), TimedEnchantments.EMPTY);
         if (!timedEnchantments.has(id)) return false;
 
         // Remove enchantment
@@ -81,15 +58,38 @@ public class ModEvents {
 
         // Remove timed enchantment
         TimedEnchantments newTimedEnchantments = timedEnchantments.remove(id);
-        if (newTimedEnchantments.isEmpty()) itemStack.remove(ModComponents.TIMED_ENCHANTMENTS.get());
-        else itemStack.set(ModComponents.TIMED_ENCHANTMENTS.get(), newTimedEnchantments);
-        return !itemStack.has(ModComponents.TIMED_ENCHANTMENTS.get());
+        if (newTimedEnchantments.isEmpty()) itemStack.remove(ModDataComponents.TIMED_ENCHANTMENTS.get());
+        else itemStack.set(ModDataComponents.TIMED_ENCHANTMENTS.get(), newTimedEnchantments);
+        return !itemStack.has(ModDataComponents.TIMED_ENCHANTMENTS.get());
+    }
+
+    public static void addIfTimedItemStack(AbstractContainerMenu containerMenu, int index) {
+        ItemStack itemStack = containerMenu.getItems().get(index);
+        itemStack.getOrDefault(ModDataComponents.TIMED_ENCHANTMENTS.get(), TimedEnchantments.EMPTY).forEach((id, timedEnchantment) -> {
+            if (!TimerSavedData.hasTimedEnchantmentId(id)) removeTimedEnchantment(id, itemStack, timedEnchantment);
+        });
+        if (itemStack.has(ModDataComponents.TIMED_ENCHANTMENTS.get())) {
+            Set<Integer> indices = TIMED_ITEM_STACKS.getOrDefault(containerMenu, new HashSet<>());
+            indices.add(index);
+            TIMED_ITEM_STACKS.put(containerMenu, indices);
+        }
+    }
+
+    public static void addIfTimedStaff(AbstractContainerMenu containerMenu, int index) {
+        ItemStack itemStack = containerMenu.getItems().get(index);
+        Integer id = itemStack.get(ModDataComponents.STAFF_TIMER.get());
+        if (id != null && !TimerSavedData.hasStaffTimerId(id)) removeStaffTimer(id, itemStack);
+        else if (itemStack.has(ModDataComponents.STAFF_TIMER.get())) {
+            Set<Integer> indices = TIMED_STAFFS.getOrDefault(containerMenu, new HashSet<>());
+            indices.add(index);
+            TIMED_STAFFS.put(containerMenu, indices);
+        }
     }
 
     // Client Side Event
     @SubscribeEvent
     public static void addTimedEnchantmentsTooltips(final ItemTooltipEvent event) {
-        TimedEnchantments timedEnchantments = event.getItemStack().get(ModComponents.TIMED_ENCHANTMENTS.get());
+        TimedEnchantments timedEnchantments = event.getItemStack().get(ModDataComponents.TIMED_ENCHANTMENTS.get());
         Player player = event.getEntity();
 
         if (timedEnchantments == null || player == null) return;
@@ -126,15 +126,6 @@ public class ModEvents {
     }
 
     @SubscribeEvent
-    public static void onPlayerOpenContainer(final PlayerContainerEvent.Open event) {
-        event.getContainer().addSlotListener(new TimerListener());
-        event.getContainer().getItems().forEach(itemStack -> {
-            ModEvents.addIfTimedItemStack(event.getContainer(), event.getContainer().getItems().indexOf(itemStack));
-            ModEvents.addIfTimedStaff(event.getContainer(), event.getContainer().getItems().indexOf(itemStack));
-        });
-    }
-
-    @SubscribeEvent
     public static void onPlayerLoggedIn(final PlayerEvent.PlayerLoggedInEvent event) {
         event.getEntity().inventoryMenu.addSlotListener(new StaffItemListener());
         event.getEntity().inventoryMenu.addSlotListener(new TimerListener());
@@ -145,7 +136,16 @@ public class ModEvents {
     }
 
     @SubscribeEvent
-    public static void tick(TickEvent.ServerTickEvent event) {
+    public static void onPlayerOpenContainer(final PlayerContainerEvent.Open event) {
+        event.getContainer().addSlotListener(new TimerListener());
+        event.getContainer().getItems().forEach(itemStack -> {
+            ModEvents.addIfTimedItemStack(event.getContainer(), event.getContainer().getItems().indexOf(itemStack));
+            ModEvents.addIfTimedStaff(event.getContainer(), event.getContainer().getItems().indexOf(itemStack));
+        });
+    }
+
+    @SubscribeEvent
+    public static void tick(final TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.END) return;
         TimerSavedData.tick();
     }
