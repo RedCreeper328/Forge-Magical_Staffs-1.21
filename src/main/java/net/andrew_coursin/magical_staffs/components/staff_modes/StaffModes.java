@@ -117,6 +117,7 @@ public class StaffModes {
 
     public void setMode(Modes mode) {
         this.mode = mode;
+        reset(true);
     }
 
     @Override

@@ -19,9 +19,11 @@ import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.StringUtil;
@@ -65,6 +67,118 @@ public class StaffItem extends Item {
     }
 
     // Private methods
+    private boolean completeAbsorb(ItemStack otherItemStack, ItemStack staffItemStack, Player player, StaffModes staffModes) {
+        // Cannot absorb with no selected enchantment or potion
+        if (staffModes.getEnchantment() == null && staffModes.getPotion() == null) {
+            message(false, player, Component.translatable("message.magical_staffs.no_choices").getString());
+            return false;
+        }
+
+        // Cannot absorb if player experience is less than requirement
+        if (player.experienceLevel < staffModes.getNewStaffLevel() && !player.isCreative()) {
+            message(false, player, Component.translatable("message.magical_staffs.no_experience", staffModes.getNewStaffLevel()).getString());
+            return false;
+        }
+
+        // Initialize local variables based on isEnchantment
+        boolean isEnchantment = staffModes.getEnchantment() != null;
+        StoredStaffEffects.Mutable storedStaffEffects = new StoredStaffEffects.Mutable(getStoredEffects(staffItemStack));
+
+        // Update the level, points, and slots of the stored effect
+        if (isEnchantment) storedStaffEffects.setEnchantmentValues(staffModes.getEnchantment(), List.of(staffModes.getNewStaffLevel(), staffModes.getNewStaffPoints(), staffModes.getNewStaffSlots()));
+        else storedStaffEffects.setPotionValues(staffModes.getPotion(), List.of(staffModes.getNewStaffLevel(), staffModes.getNewStaffPoints(), staffModes.getNewStaffSlots()));
+
+        // Apply the updated values to the item stack
+        staffItemStack.set(ModComponents.STORED_STAFF_EFFECTS.get(), storedStaffEffects.toImmutable());
+
+        // Update the other item tag or player effect to the new level
+        if (isEnchantment) absorbEnchantment(otherItemStack, player, staffModes);
+        else absorbPotion(player, staffModes);
+
+        // Reduce experience levels, message the player, and play the enchanting table sound
+        message(false, player, Component.translatable("message.magical_staffs.absorb.complete", isEnchantment ? "Enchantment" : "Potion").getString());
+        player.giveExperiencePoints(-1 * xpCostToPoints(staffModes.getNewStaffLevel()));
+        player.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
+        staffModes.reset(false);
+        return true;
+    }
+
+    private boolean completeInfuse(ItemStack otherItemStack, ItemStack staffItemStack, Player player, StaffModes staffModes) {
+        // Cannot infuse with no selected enchantment or potion
+        if (staffModes.getEnchantment() == null && staffModes.getPotion() == null) {
+            message(false, player, Component.translatable("message.magical_staffs.no_choices").getString());
+            staffModes.reset(false);
+            return false;
+        }
+
+        // Cannot infuse if player experience is less than required
+        if (player.experienceLevel < staffModes.getNewOtherLevel() && !player.isCreative()) {
+            message(false, player, Component.translatable("message.magical_staffs.no_experience", staffModes.getNewOtherLevel()).getString());
+            staffModes.reset(false);
+            return false;
+        }
+
+        // Initialize local variables
+        boolean isEnchantment = !otherItemStack.is(Items.POTION);
+        StoredStaffEffects.Mutable storedStaffEffects = new StoredStaffEffects.Mutable(getStoredEffects(staffItemStack));
+
+        // Update the level, points, and slots of the stored effect
+        if (isEnchantment) storedStaffEffects.setEnchantmentValues(staffModes.getEnchantment(), List.of(staffModes.getNewStaffLevel(), staffModes.getNewStaffPoints(), staffModes.getNewStaffSlots()));
+        else storedStaffEffects.setPotionValues(staffModes.getPotion(), List.of(staffModes.getNewStaffLevel(), staffModes.getNewStaffPoints(), staffModes.getNewStaffSlots()));
+
+        // Apply the updated values to the item stack
+        staffItemStack.set(ModComponents.STORED_STAFF_EFFECTS.get(), storedStaffEffects.toImmutable());
+
+        // Increase the effect level
+        if (isEnchantment) infuseEnchantment(otherItemStack, staffModes, player);
+        else infusePotion(otherItemStack, staffItemStack, staffModes);
+
+        // Reduce experience levels, message the player, and play the enchanting table sound
+        message(false, player, Component.translatable("message.magical_staffs.infuse.complete", isEnchantment ? "Enchantment" : "Potion").getString());
+        player.giveExperiencePoints(-1 * xpCostToPoints(staffModes.getNewOtherLevel()));
+        player.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
+        staffModes.reset(false);
+        return true;
+    }
+
+    private boolean imbue(ItemStack staffItemStack, Player player, ServerLevel serverLevel) {
+        StoredStaffEffects storedStaffEffects = getStoredEffects(staffItemStack);
+
+        // Cannot imbue with no enchantments and no potions
+        if (storedStaffEffects.isEmpty(true) && storedStaffEffects.isEmpty(false)) {
+            message(false, player, Component.translatable("message.magical_staffs.imbue.no_effects").getString());
+            return false;
+        }
+
+        int experienceCost = getStoredEffects(staffItemStack).getUsedSlots(true) + storedStaffEffects.getUsedSlots(false);
+
+        // Cannot imbue without the required experience
+        if (player.experienceLevel < experienceCost && !player.isCreative()) {
+            message(false, player, Component.translatable("message.magical_staffs.no_experience", experienceCost).getString());
+            return false;
+        }
+
+        // Apply the imbue effects to the player
+        imbueEnchantments(staffItemStack, player);
+        imbuePotions(staffItemStack, player);
+        player.giveExperiencePoints(-1 * xpCostToPoints(experienceCost));
+        serverLevel.sendParticles(ParticleTypes.DRAGON_BREATH, player.getX(), player.getY(), player.getZ(), experienceCost * 10, 0.0, 0.0, 0.0, 1.0);
+
+        // Add a cooldown timer to the staff
+        int staffTimerId = TimerSavedData.addStaffTimer(getCooldownDuration(staffItemStack));
+        staffItemStack.set(ModComponents.STAFF_TIMER.get(), staffTimerId);
+        return true;
+    }
+
+    private boolean useMode(ItemStack otherItemStack, ItemStack staffItemStack, Player player, ServerLevel serverLevel, StaffModes staffModes) {
+        switch(staffModes.getMode()) {
+            case ABSORB -> { return completeAbsorb(otherItemStack, staffItemStack, player, staffModes); }
+            case INFUSE -> { return completeInfuse(otherItemStack, staffItemStack, player, staffModes); }
+            case IMBUE -> { return imbue(staffItemStack, player, serverLevel); }
+        }
+        return false;
+    }
+
     private double staffPointsInverse(boolean isEnchantment, int points) {
         return isEnchantment ? Math.log1p(points) / Math.log(2) : (-1 + Math.sqrt(1 + 8 * points)) / 2;
     }
@@ -99,6 +213,12 @@ public class StaffItem extends Item {
 
     private int staffSlotsToPoints(boolean isEnchantment, int slots) {
         return isEnchantment ? (int) (Math.pow(2, slots) - 1) : slots * (slots + 1) / 2;
+    }
+
+    private int xpCostToPoints(int cost) {
+        if (cost >= 30) return 1395 + 112 * (cost - 30) + 9 * (cost - 31) * (cost - 30) / 2;
+        if (cost >= 15) return 315 + 37 * (cost - 15) + 5 * (cost - 16) * (cost - 15) / 2;
+        return 7 * cost + 2 * (cost - 1) * cost / 2;
     }
 
     private void absorbEnchantment(ItemStack otherItemStack, Player player, StaffModes staffModes) {
@@ -177,78 +297,6 @@ public class StaffItem extends Item {
         tooltipComponents.addAll(potionComponents);
     }
 
-    private void completeAbsorb(ItemStack otherItemStack, ItemStack staffItemStack, Player player, StaffModes staffModes) {
-        // Cannot absorb with no selected enchantment or potion
-        if (staffModes.getEnchantment() == null && staffModes.getPotion() == null) {
-            message(false, player, Component.translatable("message.magical_staffs.no_choices").getString());
-            return;
-        }
-
-        // Cannot absorb if player experience is less than requirement
-        if (player.experienceLevel < staffModes.getNewStaffLevel() && !player.isCreative()) {
-            message(false, player, Component.translatable("message.magical_staffs.no_experience", staffModes.getNewStaffLevel()).getString());
-            return;
-        }
-
-        // Initialize local variables based on isEnchantment
-        boolean isEnchantment = staffModes.getEnchantment() != null;
-        StoredStaffEffects.Mutable storedStaffEffects = new StoredStaffEffects.Mutable(getStoredEffects(staffItemStack));
-
-        // Update the level, points, and slots of the stored effect
-        if (isEnchantment) storedStaffEffects.setEnchantmentValues(staffModes.getEnchantment(), List.of(staffModes.getNewStaffLevel(), staffModes.getNewStaffPoints(), staffModes.getNewStaffSlots()));
-        else storedStaffEffects.setPotionValues(staffModes.getPotion(), List.of(staffModes.getNewStaffLevel(), staffModes.getNewStaffPoints(), staffModes.getNewStaffSlots()));
-
-        // Apply the updated values to the item stack
-        staffItemStack.set(ModComponents.STORED_STAFF_EFFECTS.get(), storedStaffEffects.toImmutable());
-
-        // Update the other item tag or player effect to the new level
-        if (isEnchantment) absorbEnchantment(otherItemStack, player, staffModes);
-        else absorbPotion(player, staffModes);
-
-        // Reduce experience levels, message the player, and play the enchanting table sound
-        message(false, player, Component.translatable("message.magical_staffs.absorb.complete", isEnchantment ? "Enchantment" : "Potion").getString());
-        player.giveExperienceLevels(-1 * staffModes.getNewStaffLevel());
-        player.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
-        staffModes.reset(false);
-    }
-
-    private void completeInfuse(ItemStack otherItemStack, ItemStack staffItemStack, Player player, StaffModes staffModes) {
-        // Cannot infuse with no selected enchantment or potion
-        if (staffModes.getEnchantment() == null && staffModes.getPotion() == null) {
-            message(false, player, Component.translatable("message.magical_staffs.no_choices").getString());
-            staffModes.reset(false);
-            return;
-        }
-
-        // Cannot infuse if player experience is less than required
-        if (player.experienceLevel < staffModes.getNewOtherLevel() && !player.isCreative()) {
-            message(false, player, Component.translatable("message.magical_staffs.no_experience", staffModes.getNewOtherLevel()).getString());
-            staffModes.reset(false);
-            return;
-        }
-
-        // Initialize local variables
-        boolean isEnchantment = !otherItemStack.is(Items.POTION);
-        StoredStaffEffects.Mutable storedStaffEffects = new StoredStaffEffects.Mutable(getStoredEffects(staffItemStack));
-
-        // Update the level, points, and slots of the stored effect
-        if (isEnchantment) storedStaffEffects.setEnchantmentValues(staffModes.getEnchantment(), List.of(staffModes.getNewStaffLevel(), staffModes.getNewStaffPoints(), staffModes.getNewStaffSlots()));
-        else storedStaffEffects.setPotionValues(staffModes.getPotion(), List.of(staffModes.getNewStaffLevel(), staffModes.getNewStaffPoints(), staffModes.getNewStaffSlots()));
-
-        // Apply the updated values to the item stack
-        staffItemStack.set(ModComponents.STORED_STAFF_EFFECTS.get(), storedStaffEffects.toImmutable());
-
-        // Increase the effect level
-        if (isEnchantment) infuseEnchantment(otherItemStack, staffModes, player);
-        else infusePotion(otherItemStack, staffItemStack, staffModes);
-
-        // Reduce experience levels, message the player, and play the enchanting table sound
-        message(false, player, Component.translatable("message.magical_staffs.infuse.complete", isEnchantment ? "Enchantment" : "Potion").getString());
-        player.giveExperienceLevels(-1 * staffModes.getNewOtherLevel());
-        player.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
-        staffModes.reset(false);
-    }
-
     private void cycleMode(Player player, StaffModes staffModes) {
         switch (staffModes.getMode()) {
             case ABSORB -> staffModes.setMode(StaffModes.Modes.INFUSE);
@@ -257,33 +305,7 @@ public class StaffItem extends Item {
         }
 
         message(false, player, Component.translatable("message.magical_staffs.mode_selected", Component.translatable("message.magical_staffs." + staffModes.getMode().toString().toLowerCase(Locale.ROOT))).getString());
-    }
-
-    private void imbue(ItemStack staffItemStack, Player player) {
-        StoredStaffEffects storedStaffEffects = getStoredEffects(staffItemStack);
-
-        // Cannot imbue with no enchantments and no potions
-        if (storedStaffEffects.isEmpty(true) && storedStaffEffects.isEmpty(false)) {
-            message(false, player, Component.translatable("message.magical_staffs.imbue.no_effects").getString());
-            return;
-        }
-
-        int experienceCost = getStoredEffects(staffItemStack).getUsedSlots(true) + storedStaffEffects.getUsedSlots(false);
-
-        // Cannot imbue without the required experience
-        if (player.experienceLevel < experienceCost && !player.isCreative()) {
-            message(false, player, Component.translatable("message.magical_staffs.no_experience", experienceCost).getString());
-            return;
-        }
-
-        // Apply the imbue effects to the player
-        imbueEnchantments(staffItemStack, player);
-        imbuePotions(staffItemStack, player);
-        player.giveExperienceLevels(-1 * experienceCost);
-        player.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
-
-        int staffTimerId = TimerSavedData.addStaffTimer(getCooldownDuration(staffItemStack));
-        staffItemStack.set(ModComponents.STAFF_TIMER.get(), staffTimerId);
+        player.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 0.5F, 1.5F);
     }
 
     private void imbueEnchantments(ItemStack staffItemStack, Player player) {
@@ -478,6 +500,13 @@ public class StaffItem extends Item {
 
         // Clamp the infuse level between 1 and the maximum determined by points stored in the staff
         int maxInfuseLevel = Math.min(otherPointsToLevel(isEnchantment, currentOtherPoints + currentStaffPoints), isEnchantment ? staffModes.getEnchantment().get().getMaxLevel() : Integer.MAX_VALUE);
+
+        if (maxInfuseLevel - currentOtherLevel < 1) {
+            message(false, player, Component.translatable("message.magical_staffs.infuse.no_points", nameComponent, otherLevelToPoints(isEnchantment, currentOtherLevel + 1) - currentOtherPoints).getString());
+            staffModes.reset(false);
+            return;
+        }
+
         staffModes.setLevel(Math.clamp(staffModes.getLevel(), 1, maxInfuseLevel - currentOtherLevel));
 
         // Calculate new other level, and points
@@ -636,14 +665,9 @@ public class StaffItem extends Item {
         }
 
         StaffModes staffModes = staffItemStack.getOrDefault(ModComponents.STAFF_MODES.get(), new StaffModes());
+        if (!staffItemStack.has(ModComponents.STAFF_MODES.get())) staffItemStack.set(ModComponents.STAFF_MODES.get(), staffModes);
         if (pPlayer.isSecondaryUseActive()) cycleMode(pPlayer, staffModes);
-        else {
-            switch (staffModes.getMode()) {
-                case ABSORB -> completeAbsorb(otherItemStack, staffItemStack, pPlayer, staffModes);
-                case INFUSE -> completeInfuse(otherItemStack, staffItemStack, pPlayer, staffModes);
-                case IMBUE -> imbue(staffItemStack, pPlayer);
-            }
-        }
+        else if (useMode(otherItemStack, staffItemStack, pPlayer, (ServerLevel) pLevel, staffModes)) pPlayer.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
 
         return InteractionResultHolder.consume(staffItemStack);
     }
