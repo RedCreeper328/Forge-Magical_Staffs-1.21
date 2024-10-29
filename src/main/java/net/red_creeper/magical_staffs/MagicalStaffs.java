@@ -2,7 +2,7 @@ package net.red_creeper.magical_staffs;
 
 import com.mojang.logging.LogUtils;
 import net.red_creeper.magical_staffs.components.ModDataComponents;
-import net.red_creeper.magical_staffs.crafting.SmithingForgeRecipe;
+import net.red_creeper.magical_staffs.crafting.ModRecipeSerializers;
 import net.red_creeper.magical_staffs.effect.ModEffects;
 import net.red_creeper.magical_staffs.item.ModItems;
 import net.red_creeper.magical_staffs.loot.ModLootModifiers;
@@ -34,7 +34,7 @@ public class MagicalStaffs
         ModEffects.register(modEventBus);
         ModItems.register(modEventBus);
         ModLootModifiers.register(modEventBus);
-        SmithingForgeRecipe.register();
+        ModRecipeSerializers.register(modEventBus);
 
         // Register the commonSetup method for mod loading
         modEventBus.addListener(this::commonSetup);

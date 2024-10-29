@@ -1,5 +1,8 @@
 package net.red_creeper.magical_staffs.item;
 
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.Rarity;
 import net.red_creeper.magical_staffs.item.custom.StaffItem;
 import net.red_creeper.magical_staffs.components.forge_material.ForgeMaterials;
 import net.minecraft.ChatFormatting;
@@ -29,31 +32,29 @@ public class ModItems {
 
     public static final RegistryObject<SmithingTemplateItem> FORGE_UPGRADE_SMITHING_TEMPLATE = ITEMS.register("forge_upgrade_smithing_template", ModItems::createForgeUpgradeTemplate);
 
-    public static final RegistryObject<StaffItem> WOODEN_STAFF = ITEMS.register("wooden_staff", () -> new StaffItem(ForgeMaterials.WOOD.activeDuration(), ForgeMaterials.WOOD.cooldownFactor(), ForgeMaterials.WOOD.enchantmentSlots(), ForgeMaterials.WOOD.potionSlots(), new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<StaffItem> WOODEN_STAFF = ITEMS.register("wooden_staff", () -> new StaffItem(ForgeMaterials.WOOD.activeDuration(), ForgeMaterials.WOOD.cooldownFactor(), ForgeMaterials.WOOD.enchantmentSlots(), ForgeMaterials.WOOD.potionSlots(), new Item.Properties().rarity(Rarity.UNCOMMON).stacksTo(1).useItemDescriptionPrefix().setId(ResourceKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MOD_ID, "wooden_staff")))));
 
-    public static final RegistryObject<StaffItem> GOLDEN_STAFF = ITEMS.register("golden_staff", () -> new StaffItem(ForgeMaterials.GOLD.activeDuration(), ForgeMaterials.GOLD.cooldownFactor(), ForgeMaterials.GOLD.enchantmentSlots(), ForgeMaterials.GOLD.potionSlots(), new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<StaffItem> GOLDEN_STAFF = ITEMS.register("golden_staff", () -> new StaffItem(ForgeMaterials.GOLD.activeDuration(), ForgeMaterials.GOLD.cooldownFactor(), ForgeMaterials.GOLD.enchantmentSlots(), ForgeMaterials.GOLD.potionSlots(), new Item.Properties().rarity(Rarity.UNCOMMON).stacksTo(1).useItemDescriptionPrefix().setId(ResourceKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MOD_ID, "golden_staff")))));
 
-    public static final RegistryObject<StaffItem> AMETHYST_STAFF = ITEMS.register("amethyst_staff", () -> new StaffItem(ForgeMaterials.AMETHYST.activeDuration(), ForgeMaterials.AMETHYST.cooldownFactor(), ForgeMaterials.AMETHYST.enchantmentSlots(), ForgeMaterials.AMETHYST.potionSlots(), new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<StaffItem> AMETHYST_STAFF = ITEMS.register("amethyst_staff", () -> new StaffItem(ForgeMaterials.AMETHYST.activeDuration(), ForgeMaterials.AMETHYST.cooldownFactor(), ForgeMaterials.AMETHYST.enchantmentSlots(), ForgeMaterials.AMETHYST.potionSlots(), new Item.Properties().rarity(Rarity.UNCOMMON).stacksTo(1).useItemDescriptionPrefix().setId(ResourceKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MOD_ID, "amethyst_staff")))));
 
-    public static final RegistryObject<StaffItem> IRON_STAFF = ITEMS.register("iron_staff", () -> new StaffItem(ForgeMaterials.IRON.activeDuration(), ForgeMaterials.IRON.cooldownFactor(), ForgeMaterials.IRON.enchantmentSlots(), ForgeMaterials.IRON.potionSlots(), new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<StaffItem> IRON_STAFF = ITEMS.register("iron_staff", () -> new StaffItem(ForgeMaterials.IRON.activeDuration(), ForgeMaterials.IRON.cooldownFactor(), ForgeMaterials.IRON.enchantmentSlots(), ForgeMaterials.IRON.potionSlots(), new Item.Properties().rarity(Rarity.UNCOMMON).stacksTo(1).useItemDescriptionPrefix().setId(ResourceKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MOD_ID, "iron_staff")))));
 
-    public static final RegistryObject<StaffItem> DIAMOND_STAFF = ITEMS.register("diamond_staff", () -> new StaffItem(ForgeMaterials.DIAMOND.activeDuration(), ForgeMaterials.DIAMOND.cooldownFactor(), ForgeMaterials.DIAMOND.enchantmentSlots(), ForgeMaterials.DIAMOND.potionSlots(), new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<StaffItem> DIAMOND_STAFF = ITEMS.register("diamond_staff", () -> new StaffItem(ForgeMaterials.DIAMOND.activeDuration(), ForgeMaterials.DIAMOND.cooldownFactor(), ForgeMaterials.DIAMOND.enchantmentSlots(), ForgeMaterials.DIAMOND.potionSlots(), new Item.Properties().rarity(Rarity.UNCOMMON).stacksTo(1).useItemDescriptionPrefix().setId(ResourceKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MOD_ID, "diamond_staff")))));
 
-    public static final RegistryObject<StaffItem> BLAZE_STAFF = ITEMS.register("blaze_staff", () -> new StaffItem(ForgeMaterials.BLAZE.activeDuration(), ForgeMaterials.BLAZE.cooldownFactor(), ForgeMaterials.BLAZE.enchantmentSlots(), ForgeMaterials.BLAZE.potionSlots(), new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<StaffItem> BLAZE_STAFF = ITEMS.register("blaze_staff", () -> new StaffItem(ForgeMaterials.BLAZE.activeDuration(), ForgeMaterials.BLAZE.cooldownFactor(), ForgeMaterials.BLAZE.enchantmentSlots(), ForgeMaterials.BLAZE.potionSlots(), new Item.Properties().rarity(Rarity.UNCOMMON).stacksTo(1).useItemDescriptionPrefix().setId(ResourceKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MOD_ID, "blaze_staff")))));
 
-    public static final RegistryObject<StaffItem> NETHERITE_STAFF = ITEMS.register("netherite_staff", () -> new StaffItem(ForgeMaterials.NETHERITE.activeDuration(), ForgeMaterials.NETHERITE.cooldownFactor(), ForgeMaterials.NETHERITE.enchantmentSlots(), ForgeMaterials.NETHERITE.potionSlots(), new Item.Properties().stacksTo(1)));
+    public static final RegistryObject<StaffItem> NETHERITE_STAFF = ITEMS.register("netherite_staff", () -> new StaffItem(ForgeMaterials.NETHERITE.activeDuration(), ForgeMaterials.NETHERITE.cooldownFactor(), ForgeMaterials.NETHERITE.enchantmentSlots(), ForgeMaterials.NETHERITE.potionSlots(), new Item.Properties().rarity(Rarity.UNCOMMON).stacksTo(1).useItemDescriptionPrefix().setId(ResourceKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MOD_ID, "netherite_staff")))));
 
     public static SmithingTemplateItem createForgeUpgradeTemplate() {
-        ChatFormatting TITLE_FORMAT = ChatFormatting.GRAY;
         ChatFormatting DESCRIPTION_FORMAT = ChatFormatting.BLUE;
         Component appliesTo = Component.translatable(Util.makeDescriptionId("item", ResourceLocation.fromNamespaceAndPath(MOD_ID, "smithing_template.forge_upgrade.applies_to"))).withStyle(DESCRIPTION_FORMAT);
         Component ingredients = Component.translatable(Util.makeDescriptionId("item", ResourceLocation.fromNamespaceAndPath(MOD_ID, "smithing_template.forge_upgrade.ingredients"))).withStyle(DESCRIPTION_FORMAT);
-        Component upgradeDescription = Component.translatable(Util.makeDescriptionId("upgrade", ResourceLocation.fromNamespaceAndPath(MOD_ID, "forge_upgrade"))).withStyle(TITLE_FORMAT);
         Component baseSlotDescription = Component.translatable(Util.makeDescriptionId("item", ResourceLocation.fromNamespaceAndPath(MOD_ID, "smithing_template.forge_upgrade.base_slot_description")));
         Component additionsSlotDescription = Component.translatable(Util.makeDescriptionId("item", ResourceLocation.fromNamespaceAndPath(MOD_ID, "smithing_template.forge_upgrade.additions_slot_description")));
         List<ResourceLocation> baseSlotEmptyIcons = List.of(ResourceLocation.withDefaultNamespace("item/empty_slot_staff"));
         List<ResourceLocation> additionalSlotEmptyIcons = List.of(ResourceLocation.withDefaultNamespace("block/empty_slot_block"), ResourceLocation.withDefaultNamespace("item/empty_slot_ingot"), ResourceLocation.withDefaultNamespace("item/empty_slot_amethyst_shard"), ResourceLocation.withDefaultNamespace("item/empty_slot_diamond"), ResourceLocation.withDefaultNamespace("item/empty_slot_blaze_rod"), ResourceLocation.withDefaultNamespace("item/empty_slot_nether_star"), ResourceLocation.withDefaultNamespace("item/empty_slot_dragon_breath"));
-        return new SmithingTemplateItem(appliesTo, ingredients, upgradeDescription, baseSlotDescription, additionsSlotDescription, baseSlotEmptyIcons, additionalSlotEmptyIcons);
+        return new SmithingTemplateItem(appliesTo, ingredients, baseSlotDescription, additionsSlotDescription, baseSlotEmptyIcons, additionalSlotEmptyIcons, new Item.Properties().rarity(Rarity.RARE).useItemDescriptionPrefix().setId(ResourceKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MOD_ID, "forge_upgrade_smithing_template"))));
     }
 
     public static void addCreative(BuildCreativeModeTabContentsEvent event) {

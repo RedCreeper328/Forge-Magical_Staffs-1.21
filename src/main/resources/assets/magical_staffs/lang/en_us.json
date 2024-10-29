@@ -42,7 +42,7 @@
   "item.magical_staffs.blaze_staff": "Blaze Staff",
   "item.magical_staffs.netherite_staff": "Netherite Staff",
   "item.magical_staffs.wooden_staff": "Wooden Staff",
-  "item.magical_staffs.forge_upgrade_smithing_template": "Smithing Template",
+  "item.magical_staffs.forge_upgrade_smithing_template": "Forge Upgrade",
   "item.magical_staffs.smithing_template.forge_upgrade.additions_slot_description": "Add Any Staff Material",
   "item.magical_staffs.smithing_template.forge_upgrade.applies_to": "Staff",
   "item.magical_staffs.smithing_template.forge_upgrade.base_slot_description": "Add a staff",
@@ -90,7 +90,5 @@
   "tooltip.magical_staffs.effect": " %s (%d slots)",
   "tooltip.magical_staffs.effect_extra": " - %d / %d points for %s",
   "tooltip.magical_staffs.extra_info": "Hold SHIFT for more info",
-  "tooltip.magical_staffs.when_used": "When Used:",
-
-  "upgrade.magical_staffs.forge_upgrade": "Forge Upgrade"
+  "tooltip.magical_staffs.when_used": "When Used:"
 }

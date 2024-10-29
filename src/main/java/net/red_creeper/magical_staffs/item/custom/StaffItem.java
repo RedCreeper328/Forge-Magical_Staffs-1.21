@@ -1,6 +1,7 @@
 package net.red_creeper.magical_staffs.item.custom;
 
 import com.mojang.datafixers.util.Either;
+import net.minecraft.world.InteractionResult;
 import net.red_creeper.magical_staffs.components.ModDataComponents;
 import net.red_creeper.magical_staffs.components.staff_modes.StaffModes;
 import net.red_creeper.magical_staffs.components.stored_staff_effects.StoredStaffEffects;
@@ -28,7 +29,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
@@ -572,8 +572,7 @@ public class StaffItem extends Item {
     }
 
     private static void message(boolean debug, Player player, String string) {
-        if (!debug) player.displayClientMessage(Component.literal(string), true);
-        else player.sendSystemMessage(Component.literal(string));
+        player.displayClientMessage(Component.literal(string), !debug);
     }
 
     // Public methods
@@ -647,19 +646,19 @@ public class StaffItem extends Item {
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
+    public InteractionResult use(Level pLevel, Player pPlayer, InteractionHand pUsedHand) {
         ItemStack staffItemStack = pPlayer.getItemInHand(pUsedHand);
         ItemStack otherItemStack = pUsedHand == InteractionHand.MAIN_HAND ? pPlayer.getOffhandItem() : pPlayer.getMainHandItem();
 
-        if (pLevel.isClientSide()) return InteractionResultHolder.consume(staffItemStack);
+        if (pLevel.isClientSide()) return InteractionResult.CONSUME;
         pPlayer.startUsingItem(pUsedHand);
 
         if (!this.isFoil(staffItemStack)) {
             Integer staffTimer = staffItemStack.get(ModDataComponents.STAFF_TIMER.get());
-            if (staffTimer == null) return InteractionResultHolder.consume(staffItemStack);
+            if (staffTimer == null) return InteractionResult.CONSUME;
             int time = TimerSavedData.getStaffTimer(staffTimer);
             message(false, pPlayer, Component.translatable("message.magical_staffs.on_cool_down", StringUtil.formatTickDuration(time, pLevel.tickRateManager().tickrate())).getString());
-            return InteractionResultHolder.consume(staffItemStack);
+            return InteractionResult.CONSUME;
         }
 
         StaffModes staffModes = staffItemStack.getOrDefault(ModDataComponents.STAFF_MODES.get(), new StaffModes());
@@ -667,12 +666,12 @@ public class StaffItem extends Item {
         if (pPlayer.isSecondaryUseActive()) cycleMode(pPlayer, staffModes);
         else if (useMode(otherItemStack, staffItemStack, pPlayer, (ServerLevel) pLevel, staffModes)) pPlayer.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
 
-        return InteractionResultHolder.consume(staffItemStack);
+        return InteractionResult.CONSUME;
     }
 
     @Override
-    public UseAnim getUseAnimation(ItemStack pStack) {
-        return UseAnim.SPYGLASS;
+    public ItemUseAnimation getUseAnimation(ItemStack pStack) {
+        return ItemUseAnimation.SPYGLASS;
     }
 
     @Override
