@@ -52,9 +52,13 @@ public class ModEvents {
         TimedEnchantments timedEnchantments = itemStack.getOrDefault(ModDataComponents.TIMED_ENCHANTMENTS.get(), TimedEnchantments.EMPTY);
         if (!timedEnchantments.has(id)) return false;
 
-        // Remove enchantment
-        int newLevel = EnchantmentHelper.getItemEnchantmentLevel(timedEnchantment.getEnchantment(), itemStack) - timedEnchantment.getLevel();
-        EnchantmentHelper.updateEnchantments(itemStack, itemEnchantments -> itemEnchantments.set(timedEnchantment.getEnchantment(), newLevel));
+        // Only reduces the enchantment level once overflow has been reduced to zero
+        int reduction = timedEnchantments.getOverflow(timedEnchantment.getEnchantment()) - timedEnchantment.getLevel();
+        if (reduction < 0) {
+            // Enchantment level cannot be below zero, this check is necessary if an enchantment was absorbed from an item with timed enchantments
+            int newLevel = Math.max(EnchantmentHelper.getItemEnchantmentLevel(timedEnchantment.getEnchantment(), itemStack) + reduction, 0);
+            EnchantmentHelper.updateEnchantments(itemStack, itemEnchantments -> itemEnchantments.set(timedEnchantment.getEnchantment(), newLevel));
+        }
 
         // Remove timed enchantment
         TimedEnchantments newTimedEnchantments = timedEnchantments.remove(id);

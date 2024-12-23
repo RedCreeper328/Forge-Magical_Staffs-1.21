@@ -322,11 +322,18 @@ public class StaffItem extends Item {
 
                 // Increase the enchantment level
                 int newLevel = EnchantmentHelper.getItemEnchantmentLevel(enchantment, itemStack) + addLevel;
+                int overflow = 0;
+
+                if (newLevel > 2 * enchantment.get().getMaxLevel()) {
+                    overflow = newLevel - 2 * enchantment.get().getMaxLevel();
+                    newLevel = 2 * enchantment.get().getMaxLevel();
+                }
+
                 itemStack.enchant(enchantment, newLevel);
 
                 // Add the timed enchantment
                 TimedEnchantments timedEnchantments = itemStack.getOrDefault(ModDataComponents.TIMED_ENCHANTMENTS.get(), TimedEnchantments.EMPTY);
-                itemStack.set(ModDataComponents.TIMED_ENCHANTMENTS.get(), timedEnchantments.add(timedEnchantmentId, timedEnchantment));
+                itemStack.set(ModDataComponents.TIMED_ENCHANTMENTS.get(), timedEnchantments.add(overflow, timedEnchantmentId, timedEnchantment));
             }
         }
     }
@@ -447,8 +454,8 @@ public class StaffItem extends Item {
         // Create translatable components and message the player
         String pKey = isEnchantment ? "enchantment.level." : "potion.potency.";
         int adjustment = isEnchantment ? 0 : 1;
-        Component newOtherLevelComponent = staffModes.getNewOtherLevel() - adjustment > 0 ? Component.translatable(pKey + (staffModes.getNewOtherLevel() - adjustment)) : Component.literal("");
-        Component newStaffLevelComponent = staffModes.getNewStaffLevel() - adjustment > 0 ? Component.translatable(pKey + (staffModes.getNewStaffLevel() - adjustment)) : Component.literal("");
+        Component newOtherLevelComponent = Component.translatable(pKey + (staffModes.getNewOtherLevel() - adjustment));
+        Component newStaffLevelComponent = Component.translatable(pKey + (staffModes.getNewStaffLevel() - adjustment));
         message(false, player, Component.translatable("message.magical_staffs.absorb.prepare", nameComponent, newStaffLevelComponent, staffModes.getNewStaffPoints(), staffModes.getNewStaffSlots(), newOtherLevelComponent).getString());
     }
 
@@ -485,7 +492,7 @@ public class StaffItem extends Item {
 
         // Stop if item can not be enchanted with enchantment
         if (isEnchantment) {
-            if (!staffModes.getEnchantment().get().canEnchant(otherItemStack) && !otherItemStack.is(Items.BOOK) && !otherItemStack.is(Items.ENCHANTED_BOOK)) {
+            if (!staffModes.getEnchantment().get().canEnchant(otherItemStack) && !EnchantmentHelper.isEnchantmentCompatible(EnchantmentHelper.getEnchantmentsForCrafting(otherItemStack).keySet(), staffModes.getEnchantment())) {
                 message(false, player, Component.translatable("message.magical_staffs.infuse.can_not_enchant", nameComponent).getString());
                 staffModes.reset(false);
                 return;
@@ -523,8 +530,8 @@ public class StaffItem extends Item {
         // Create translatable components and message the player
         String pKey = isEnchantment ? "enchantment.level." : "potion.potency.";
         int adjustment = isEnchantment ? 0 : 1;
-        Component newOtherLevelComponent = staffModes.getNewOtherLevel() - adjustment > 0 ? Component.translatable(pKey + (staffModes.getNewOtherLevel() - adjustment)) : Component.literal("");
-        Component newStaffLevelComponent = staffModes.getNewStaffLevel() - adjustment > 0 ? Component.translatable(pKey + (staffModes.getNewStaffLevel() - adjustment)) : Component.literal("");
+        Component newOtherLevelComponent = Component.translatable(pKey + (staffModes.getNewOtherLevel() - adjustment));
+        Component newStaffLevelComponent = Component.translatable(pKey + (staffModes.getNewStaffLevel() - adjustment));
         message(false, player, Component.translatable("message.magical_staffs.infuse.prepare", nameComponent, newStaffLevelComponent, staffModes.getNewStaffPoints(), staffModes.getNewStaffSlots(), newOtherLevelComponent).getString());
     }
 
