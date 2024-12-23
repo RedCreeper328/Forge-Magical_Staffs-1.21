@@ -1,21 +1,16 @@
 {
   "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "A": "minecraft:amethyst_cluster",
+    "#": "minecraft:netherite_ingot",
+    "S": "minecraft:stick"
+  },
   "pattern": [
     " #A",
     " S#",
     "S  "
   ],
-  "key": {
-    "A": {
-      "item": "minecraft:amethyst_cluster"
-    },
-    "#": {
-      "item": "minecraft:netherite_ingot"
-    },
-    "S": {
-      "item": "minecraft:stick"
-    }
-  },
   "result": {
     "count": 1,
     "id": "magical_staffs:netherite_staff"

@@ -5,9 +5,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "magical_staffs:forge_upgrade_smithing_template"
-            ]
+            "items": "magical_staffs:forge_upgrade_smithing_template"
           }
         ]
       },
@@ -30,6 +28,5 @@
     "recipes": [
       "magical_staffs:forge_upgrade_smithing_template"
     ]
-  },
-  "sends_telemetry_event": false
+  }
 }

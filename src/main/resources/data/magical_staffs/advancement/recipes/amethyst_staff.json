@@ -5,9 +5,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "minecraft:amethyst_cluster"
-            ]
+            "items": "minecraft:amethyst_cluster"
           }
         ]
       },
@@ -30,6 +28,5 @@
     "recipes": [
       "magical_staffs:amethyst_staff"
     ]
-  },
-  "sends_telemetry_event": false
+  }
 }
