@@ -492,7 +492,7 @@ public class StaffItem extends Item {
 
         // Stop if item can not be enchanted with enchantment
         if (isEnchantment) {
-            if (!staffModes.getEnchantment().get().canEnchant(otherItemStack) && !EnchantmentHelper.isEnchantmentCompatible(EnchantmentHelper.getEnchantmentsForCrafting(otherItemStack).keySet(), staffModes.getEnchantment())) {
+            if (!staffModes.getEnchantment().get().canEnchant(otherItemStack) || !EnchantmentHelper.isEnchantmentCompatible(EnchantmentHelper.getEnchantmentsForCrafting(otherItemStack).keySet(), staffModes.getEnchantment())) {
                 message(false, player, Component.translatable("message.magical_staffs.infuse.can_not_enchant", nameComponent).getString());
                 staffModes.reset(false);
                 return;
