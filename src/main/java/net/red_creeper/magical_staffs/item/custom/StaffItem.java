@@ -489,10 +489,12 @@ public class StaffItem extends Item {
         int currentStaffPoints = storedStaffEffects.getValue(isEnchantment ? Either.left(staffModes.getEnchantment()) : Either.right(staffModes.getPotion()), StoredStaffEffects.Indices.POINTS);
 
         Component nameComponent = Component.translatable(isEnchantment ? staffModes.getEnchantment().get().description().getString() : staffModes.getPotion().get().getDescriptionId());
+        Set<Holder<Enchantment>> otherItemEnchantments = EnchantmentHelper.getEnchantmentsForCrafting(otherItemStack).keySet();
 
         // Stop if item can not be enchanted with enchantment
         if (isEnchantment) {
-            if (!staffModes.getEnchantment().get().canEnchant(otherItemStack) || !EnchantmentHelper.isEnchantmentCompatible(EnchantmentHelper.getEnchantmentsForCrafting(otherItemStack).keySet(), staffModes.getEnchantment())) {
+            // Checks if (the item doesn't support the enchantment) or (doesn't have the enchantment already and the enchantment isn't compatible with other enchantments on the item)
+            if (!staffModes.getEnchantment().get().canEnchant(otherItemStack) || !otherItemEnchantments.contains(staffModes.getEnchantment()) && !EnchantmentHelper.isEnchantmentCompatible(otherItemEnchantments, staffModes.getEnchantment())) {
                 message(false, player, Component.translatable("message.magical_staffs.infuse.can_not_enchant", nameComponent).getString());
                 staffModes.reset(false);
                 return;
