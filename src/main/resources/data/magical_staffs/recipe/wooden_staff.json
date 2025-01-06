@@ -3,7 +3,7 @@
   "category": "equipment",
   "key": {
     "A": "minecraft:amethyst_cluster",
-    "#": "minecraft:planks",
+    "#": "#minecraft:planks",
     "S": "minecraft:stick"
   },
   "pattern": [
