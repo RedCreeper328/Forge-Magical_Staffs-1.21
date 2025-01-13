@@ -67,6 +67,19 @@ public class StaffItem extends Item {
     }
 
     // Private methods
+    private boolean canEnchant(ItemStack otherItemStack, StaffModes staffModes) {
+        Set<Holder<Enchantment>> otherItemEnchantments = EnchantmentHelper.getEnchantmentsForCrafting(otherItemStack).keySet();
+
+        // Need to check if the item is an enchanted, or regular, book because enchanted books aren't defined as a supported item for enchantments
+        boolean canEnchantItem =  staffModes.getEnchantment().get().canEnchant(otherItemStack) || otherItemStack.is(Items.ENCHANTED_BOOK) || otherItemStack.is(Items.BOOK);
+
+        // Need to check if the item has the enchantment because every enchantment is considered incompatible with itself, but the staff should be able to upgrade the enchantment
+        boolean enchantmentIsCompatible = EnchantmentHelper.isEnchantmentCompatible(otherItemEnchantments, staffModes.getEnchantment()) || otherItemEnchantments.contains(staffModes.getEnchantment());
+
+        // If either condition fails then the staff cannot enchant the item
+        return canEnchantItem && enchantmentIsCompatible;
+    }
+
     private boolean completeAbsorb(ItemStack otherItemStack, ItemStack staffItemStack, Player player, StaffModes staffModes) {
         // Cannot absorb with no selected enchantment or potion
         if (staffModes.getEnchantment() == null && staffModes.getPotion() == null) {
@@ -489,12 +502,10 @@ public class StaffItem extends Item {
         int currentStaffPoints = storedStaffEffects.getValue(isEnchantment ? Either.left(staffModes.getEnchantment()) : Either.right(staffModes.getPotion()), StoredStaffEffects.Indices.POINTS);
 
         Component nameComponent = Component.translatable(isEnchantment ? staffModes.getEnchantment().get().description().getString() : staffModes.getPotion().get().getDescriptionId());
-        Set<Holder<Enchantment>> otherItemEnchantments = EnchantmentHelper.getEnchantmentsForCrafting(otherItemStack).keySet();
 
         // Stop if item can not be enchanted with enchantment
         if (isEnchantment) {
-            // Checks if (the item doesn't support the enchantment) or (doesn't have the enchantment already and the enchantment isn't compatible with other enchantments on the item)
-            if (!staffModes.getEnchantment().get().canEnchant(otherItemStack) || !otherItemEnchantments.contains(staffModes.getEnchantment()) && !EnchantmentHelper.isEnchantmentCompatible(otherItemEnchantments, staffModes.getEnchantment())) {
+            if (!canEnchant(otherItemStack, staffModes)) {
                 message(false, player, Component.translatable("message.magical_staffs.infuse.can_not_enchant", nameComponent).getString());
                 staffModes.reset(false);
                 return;
