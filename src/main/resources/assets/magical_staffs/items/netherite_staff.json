@@ -1,0 +1,14 @@
+{
+  "model": {
+    "type": "minecraft:condition",
+    "on_false": {
+      "type": "minecraft:model",
+      "model": "magical_staffs:item/netherite_staff"
+    },
+    "on_true": {
+      "type": "minecraft:model",
+      "model": "magical_staffs:item/netherite_staff_casting"
+    },
+    "property": "minecraft:using_item"
+  }
+}

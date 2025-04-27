@@ -1,7 +1,6 @@
 package net.red_creeper.magical_staffs.event;
 
 import net.red_creeper.magical_staffs.MagicalStaffs;
-import net.red_creeper.magical_staffs.util.ModItemProperties;
 import net.red_creeper.magical_staffs.util.ModKeyBindings;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
@@ -20,7 +19,6 @@ public class ClientEvents {
             // Some client setup code
             MagicalStaffs.LOGGER.info("HELLO FROM CLIENT SETUP");
             MagicalStaffs.LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
-            ModItemProperties.addCustomItemProperties();
         }
 
         @SubscribeEvent

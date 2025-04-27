@@ -1,0 +1,14 @@
+{
+  "model": {
+    "type": "minecraft:condition",
+    "on_false": {
+      "type": "minecraft:model",
+      "model": "magical_staffs:item/wooden_staff"
+    },
+    "on_true": {
+      "type": "minecraft:model",
+      "model": "magical_staffs:item/wooden_staff_casting"
+    },
+    "property": "minecraft:using_item"
+  }
+}

@@ -47,7 +47,7 @@ public class ModItems {
     public static final RegistryObject<StaffItem> NETHERITE_STAFF = ITEMS.register("netherite_staff", () -> new StaffItem(ForgeMaterials.NETHERITE.activeDuration(), ForgeMaterials.NETHERITE.cooldownFactor(), ForgeMaterials.NETHERITE.enchantmentSlots(), ForgeMaterials.NETHERITE.potionSlots(), staffItemProperties("netherite_staff")));
 
     private static Item.Properties staffItemProperties(String name) {
-        return new Item.Properties().rarity(Rarity.UNCOMMON).stacksTo(1).useItemDescriptionPrefix().setId(ResourceKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MOD_ID, name)));
+        return new Item.Properties().rarity(Rarity.UNCOMMON).stacksTo(1).useItemDescriptionPrefix().setId(ITEMS.key(name));
     }
 
     public static SmithingTemplateItem createForgeUpgradeTemplate() {

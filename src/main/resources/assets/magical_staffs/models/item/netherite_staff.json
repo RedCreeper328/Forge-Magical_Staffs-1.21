@@ -2,12 +2,5 @@
   "parent": "minecraft:item/handheld",
   "textures": {
     "layer0": "magical_staffs:item/netherite_staff"
-  },
-  "overrides": [
-    {
-      "predicate": {
-        "magical_staffs:casting": 1
-      },
-      "model": "magical_staffs:item/netherite_staff_casting"
-    }]
+  }
 }
