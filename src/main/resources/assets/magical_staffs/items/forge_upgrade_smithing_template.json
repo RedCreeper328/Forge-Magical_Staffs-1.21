@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "magical_staffs:item/forge_upgrade_smithing_template"
+  }
+}
