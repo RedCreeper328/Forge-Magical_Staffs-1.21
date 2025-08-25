@@ -2,14 +2,12 @@ package net.red_creeper.magical_staffs.level;
 
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.util.datafix.DataFixTypes;
+import net.minecraft.world.level.saveddata.SavedDataType;
 import net.red_creeper.magical_staffs.components.timed_enchantments.TimedEnchantment;
 import net.red_creeper.magical_staffs.event.ModEvents;
 import net.minecraft.MethodsReturnNonnullByDefault;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtOps;
-import net.minecraft.nbt.Tag;
-import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.saveddata.SavedData;
 
@@ -56,14 +54,32 @@ public class TimerSavedData extends SavedData {
             }
     );
 
-    public static final String FILE_NAME = "magical_staffs_timers";
+    private static final Codec<TimerSavedData> CODEC = RecordCodecBuilder.create(
+            instance -> instance.group(
+                    STAFF_TIMERS_MAP_CODEC.fieldOf("StaffTimers").forGetter(timerSavedData -> timerSavedData.staffTimers),
+                    TIMED_ENCHANTMENTS_MAP_CODEC.fieldOf("TimedEnchantments").forGetter(timerSavedData -> timerSavedData.timedEnchantments)
+                    )
+                    .apply(instance, TimerSavedData::new)
+    );
 
-    public TimerSavedData(ServerLevel serverLevel) {
-        SERVER_LEVEL = serverLevel;
+    public static final String FILE_NAME = "magical_staffs_timers";
+    public static final SavedDataType<TimerSavedData> TYPE = new SavedDataType<>(FILE_NAME, TimerSavedData::new, CODEC, DataFixTypes.LEVEL);
+
+    public TimerSavedData() {
+        this.setDirty();
+    }
+
+    private TimerSavedData(Map<Integer, Integer> staffTimers, Map<Integer, TimedEnchantment> timedEnchantments) {
+        this.staffTimers = staffTimers;
+        this.timedEnchantments = timedEnchantments;
     }
 
     private static TimerSavedData getInstance() {
-        return SERVER_LEVEL.getDataStorage().computeIfAbsent(factory(SERVER_LEVEL), FILE_NAME);
+        return SERVER_LEVEL.getDataStorage().computeIfAbsent(TYPE);
+    }
+
+    public void setServerLevel(ServerLevel serverLevel) {
+        SERVER_LEVEL = serverLevel;
     }
 
     public static boolean hasStaffTimerId(int id) {
@@ -92,22 +108,8 @@ public class TimerSavedData extends SavedData {
         return getInstance().staffTimers.getOrDefault(id, 0);
     }
 
-    public static SavedData.Factory<TimerSavedData> factory(ServerLevel serverLevel) {
-        return new SavedData.Factory<>(() -> new TimerSavedData(serverLevel), (compoundTag, provider) -> load(compoundTag, provider, serverLevel), null);
-    }
-
     public static TimedEnchantment getTimedEnchantment(int id) {
         return getInstance().timedEnchantments.get(id);
-    }
-
-    public static TimerSavedData load(CompoundTag compoundTag, HolderLookup.Provider registries, ServerLevel serverLevel) {
-        TimerSavedData timerSavedData = new TimerSavedData(serverLevel);
-        timerSavedData.STAFF_TIMERS_MAX_ID = compoundTag.getInt("StaffTimersMaxID");
-        timerSavedData.TIMED_ENCHANTMENTS_MAX_ID = compoundTag.getInt("TimedEnchantmentsMaxID");
-        RegistryOps<Tag> registryops = registries.createSerializationContext(NbtOps.INSTANCE);
-        timerSavedData.staffTimers = STAFF_TIMERS_MAP_CODEC.decode(registryops, compoundTag.get("StaffTimers")).getOrThrow().getFirst();
-        timerSavedData.timedEnchantments = TIMED_ENCHANTMENTS_MAP_CODEC.decode(registryops, compoundTag.get("TimedEnchantments")).getOrThrow().getFirst();
-        return timerSavedData;
     }
 
     public static void tick() {
@@ -132,15 +134,5 @@ public class TimerSavedData extends SavedData {
             getInstance().timedEnchantments.remove(id, timedEnchantment);
             ModEvents.TIMED_ITEM_STACKS.forEach((containerMenu, indices) -> indices.removeIf(index -> ModEvents.removeTimedEnchantment(id, containerMenu.getItems().get(index), timedEnchantment)));
         });
-    }
-
-    @Override
-    public CompoundTag save(CompoundTag pTag, HolderLookup.Provider pRegistries) {
-        pTag.putInt("StaffTimersMaxID", this.STAFF_TIMERS_MAX_ID);
-        pTag.putInt("TimedEnchantmentsMaxID", this.TIMED_ENCHANTMENTS_MAX_ID);
-        RegistryOps<Tag> registryops = pRegistries.createSerializationContext(NbtOps.INSTANCE);
-        pTag.put("StaffTimers", STAFF_TIMERS_MAP_CODEC.encodeStart(registryops, this.staffTimers).getOrThrow());
-        pTag.put("TimedEnchantments", TIMED_ENCHANTMENTS_MAP_CODEC.encodeStart(registryops, this.timedEnchantments).getOrThrow());
-        return pTag;
     }
 }

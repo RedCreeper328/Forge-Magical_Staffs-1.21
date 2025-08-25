@@ -264,7 +264,7 @@ public class StaffItem extends Item {
             player.addEffect(new MobEffectInstance(staffModes.getPotion(), absorbPotionInstance.getDuration(), staffModes.getNewOtherLevel() - 1));
     }
 
-    private void appendEnchantments(ItemStack staffItemStack, List<Component> tooltipComponents) {
+    private void appendEnchantments(int index, ItemStack staffItemStack, List<Component> tooltipComponents) {
         ArrayList<Component> enchantmentComponents = new ArrayList<>();
         StoredStaffEffects storedStaffEffects = getStoredEffects(staffItemStack);
 
@@ -282,11 +282,11 @@ public class StaffItem extends Item {
             }
         }
 
-        tooltipComponents.add(Component.translatable("tooltip.magical_staffs.enchantment_slots", getStoredEffects(staffItemStack).getUsedSlots(true), getMaxSlots(true, staffItemStack)).withStyle(ChatFormatting.DARK_PURPLE));
-        tooltipComponents.addAll(enchantmentComponents);
+        tooltipComponents.add(tooltipComponents.size() - index, Component.translatable("tooltip.magical_staffs.enchantment_slots", getStoredEffects(staffItemStack).getUsedSlots(true), getMaxSlots(true, staffItemStack)).withStyle(ChatFormatting.DARK_PURPLE));
+        tooltipComponents.addAll(tooltipComponents.size() - index, enchantmentComponents);
     }
 
-    private void appendPotions(ItemStack staffItemStack, List<Component> tooltipComponents) {
+    private void appendPotions(int index, ItemStack staffItemStack, List<Component> tooltipComponents) {
         ArrayList<Component> potionComponents = new ArrayList<>();
         StoredStaffEffects storedStaffEffects = getStoredEffects(staffItemStack);
 
@@ -306,8 +306,8 @@ public class StaffItem extends Item {
             }
         }
 
-        tooltipComponents.add(Component.translatable("tooltip.magical_staffs.potion_slots", getStoredEffects(staffItemStack).getUsedSlots(false), getMaxSlots(false, staffItemStack)).withStyle(ChatFormatting.DARK_PURPLE));
-        tooltipComponents.addAll(potionComponents);
+        tooltipComponents.add(tooltipComponents.size() - index, Component.translatable("tooltip.magical_staffs.potion_slots", getStoredEffects(staffItemStack).getUsedSlots(false), getMaxSlots(false, staffItemStack)).withStyle(ChatFormatting.DARK_PURPLE));
+        tooltipComponents.addAll(tooltipComponents.size() - index, potionComponents);
     }
 
     private void cycleMode(Player player, StaffModes staffModes) {
@@ -600,6 +600,22 @@ public class StaffItem extends Item {
         return getStoredEffects(staffItemStack).getUsedSlots(true) <= getMaxSlots(true, staffItemStack) && getStoredEffects(staffItemStack).getUsedSlots(false) <= getMaxSlots(false, staffItemStack);
     }
 
+    public void appendHoverText(ItemStack pStack, TooltipContext pContext, List<Component> pTooltipComponents, TooltipFlag pTooltipFlag) {
+        int index = pTooltipFlag.isAdvanced() ? 2 : 0;
+
+        pTooltipComponents.add(pTooltipComponents.size() - index, Component.translatable("tooltip.magical_staffs.when_used").withStyle(ChatFormatting.GRAY));
+        pTooltipComponents.add(pTooltipComponents.size() - index, Component.translatable("tooltip.magical_staffs.active_duration", StringUtil.formatTickDuration(getActiveDuration(pStack), pContext.tickRate())).withStyle(ChatFormatting.DARK_GREEN));
+        pTooltipComponents.add(pTooltipComponents.size() - index, Component.translatable("tooltip.magical_staffs.cool_down_duration", StringUtil.formatTickDuration(getCooldownDuration(pStack), pContext.tickRate())).withStyle(ChatFormatting.DARK_GREEN));
+        pTooltipComponents.add(pTooltipComponents.size() - index, CommonComponents.EMPTY);
+        appendEnchantments(index, pStack, pTooltipComponents);
+        pTooltipComponents.add(pTooltipComponents.size() - index, CommonComponents.EMPTY);
+        appendPotions(index, pStack, pTooltipComponents);
+
+        if (!Screen.hasShiftDown()) {
+            pTooltipComponents.add(pTooltipComponents.size() - index, Component.translatable("tooltip.magical_staffs.extra_info").withStyle(ChatFormatting.DARK_GRAY));
+        }
+    }
+
     public void useKeyBind(ItemStack otherItemStack, ItemStack staffItemStack, Player player, StaffItemKeyBindC2SPacket.KEY_BINDS keyBind) {
         StaffModes staffModes = staffItemStack.getOrDefault(ModDataComponents.STAFF_MODES.get(), new StaffModes());
         switch(keyBind) {
@@ -692,22 +708,6 @@ public class StaffItem extends Item {
     @Override
     public ItemUseAnimation getUseAnimation(ItemStack pStack) {
         return ItemUseAnimation.SPYGLASS;
-    }
-
-    @Override
-    public void appendHoverText(ItemStack pStack, TooltipContext pContext, List<Component> pTooltipComponents, TooltipFlag pTooltipFlag) {
-        pTooltipComponents.add(Component.translatable("tooltip.magical_staffs.when_used").withStyle(ChatFormatting.GRAY));
-        pTooltipComponents.add(Component.translatable("tooltip.magical_staffs.active_duration", StringUtil.formatTickDuration(getActiveDuration(pStack), pContext.tickRate())).withStyle(ChatFormatting.DARK_GREEN));
-        pTooltipComponents.add(Component.translatable("tooltip.magical_staffs.cool_down_duration", StringUtil.formatTickDuration(getCooldownDuration(pStack), pContext.tickRate())).withStyle(ChatFormatting.DARK_GREEN));
-        pTooltipComponents.add(CommonComponents.EMPTY);
-        appendEnchantments(pStack, pTooltipComponents);
-        pTooltipComponents.add(CommonComponents.EMPTY);
-        appendPotions(pStack, pTooltipComponents);
-
-        if (!Screen.hasShiftDown()) {
-            pTooltipComponents.add(Component.translatable("tooltip.magical_staffs.extra_info").withStyle(ChatFormatting.DARK_GRAY));
-        }
-        super.appendHoverText(pStack, pContext, pTooltipComponents, pTooltipFlag);
     }
 
     @Mod.EventBusSubscriber(modid = MOD_ID, value = Dist.CLIENT)

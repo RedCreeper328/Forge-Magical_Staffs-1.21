@@ -7,6 +7,7 @@ import net.red_creeper.magical_staffs.components.timed_enchantments.TimedEnchant
 import net.red_creeper.magical_staffs.effect.AttackMobEffectInstance;
 import net.red_creeper.magical_staffs.inventory.StaffItemListener;
 import net.red_creeper.magical_staffs.inventory.TimerListener;
+import net.red_creeper.magical_staffs.item.custom.StaffItem;
 import net.red_creeper.magical_staffs.level.TimerSavedData;
 import net.red_creeper.magical_staffs.networking.ModPacketHandler;
 import net.red_creeper.magical_staffs.networking.packet.AddTimedEnchantmentsTooltipsC2SPacket;
@@ -92,6 +93,16 @@ public class ModEvents {
 
     // Client Side Event
     @SubscribeEvent
+    public static void addStaffTooltips(final ItemTooltipEvent event) {
+        Player player = event.getEntity();
+
+        if (player == null || !(event.getItemStack().getItem() instanceof StaffItem staffItem)) return;
+
+        staffItem.appendHoverText(event.getItemStack(), Item.TooltipContext.of(player.level()), event.getToolTip(), event.getFlags());
+    }
+
+    // Client Side Event
+    @SubscribeEvent
     public static void addTimedEnchantmentsTooltips(final ItemTooltipEvent event) {
         TimedEnchantments timedEnchantments = event.getItemStack().get(ModDataComponents.TIMED_ENCHANTMENTS.get());
         Player player = event.getEntity();
@@ -125,7 +136,8 @@ public class ModEvents {
     @SubscribeEvent
     public static void onAttachSavedData(final LevelEvent.Load event) {
         if (event.getLevel() instanceof ServerLevel serverLevel && serverLevel.dimension() == ServerLevel.OVERWORLD) {
-            serverLevel.getDataStorage().computeIfAbsent(TimerSavedData.factory(serverLevel), TimerSavedData.FILE_NAME);
+            TimerSavedData timerSavedData = serverLevel.getDataStorage().computeIfAbsent(TimerSavedData.TYPE);
+            timerSavedData.setServerLevel(serverLevel);
         }
     }
 
@@ -150,6 +162,7 @@ public class ModEvents {
 
     @SubscribeEvent
     public static void tick(final TickEvent.ServerTickEvent event) {
+        if (event.getServer().tickRateManager().isFrozen() && event.getServer().tickRateManager().frozenTicksToRun() <= 0) return;
         if (event.phase == TickEvent.Phase.END) return;
         TimerSavedData.tick();
     }

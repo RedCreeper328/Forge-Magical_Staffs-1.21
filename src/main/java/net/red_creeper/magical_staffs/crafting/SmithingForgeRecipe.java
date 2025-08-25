@@ -27,11 +27,11 @@ import static net.red_creeper.magical_staffs.MagicalStaffs.MOD_ID;
 @ParametersAreNonnullByDefault
 public class SmithingForgeRecipe implements SmithingRecipe {
     final Optional<Ingredient> addition;
-    final Optional<Ingredient> base;
+    final Ingredient base;
     final Optional<Ingredient> template;
     private PlacementInfo placementInfo;
 
-    public SmithingForgeRecipe(Optional<Ingredient> pTemplate, Optional<Ingredient> pBase, Optional<Ingredient> pAddition) {
+    public SmithingForgeRecipe(Optional<Ingredient> pTemplate, Ingredient pBase, Optional<Ingredient> pAddition) {
         this.template = pTemplate;
         this.base = pBase;
         this.addition = pAddition;
@@ -56,7 +56,7 @@ public class SmithingForgeRecipe implements SmithingRecipe {
     @Override
     public PlacementInfo placementInfo() {
         if (this.placementInfo == null) {
-            this.placementInfo = PlacementInfo.createFromOptionals(List.of(this.template, this.base, this.addition));
+            this.placementInfo = PlacementInfo.createFromOptionals(List.of(this.template, Optional.of(this.base), this.addition));
         }
 
         return this.placementInfo;
@@ -68,7 +68,7 @@ public class SmithingForgeRecipe implements SmithingRecipe {
     }
 
     @Override
-    public Optional<Ingredient> baseIngredient() {
+    public Ingredient baseIngredient() {
         return this.base;
     }
 
@@ -85,14 +85,14 @@ public class SmithingForgeRecipe implements SmithingRecipe {
     public static class Serializer implements RecipeSerializer<SmithingForgeRecipe> {
         private static final MapCodec<SmithingForgeRecipe> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
                 Ingredient.CODEC.optionalFieldOf("template").forGetter(smithingForgeRecipe -> smithingForgeRecipe.template),
-                Ingredient.CODEC.optionalFieldOf("base").forGetter(smithingForgeRecipe -> smithingForgeRecipe.base),
+                Ingredient.CODEC.fieldOf("base").forGetter(smithingForgeRecipe -> smithingForgeRecipe.base),
                 Ingredient.CODEC.optionalFieldOf("addition").forGetter(smithingForgeRecipe -> smithingForgeRecipe.addition)
         ).apply(instance, SmithingForgeRecipe::new));
 
         public static final StreamCodec<RegistryFriendlyByteBuf, SmithingForgeRecipe> STREAM_CODEC = StreamCodec.composite(
                 Ingredient.OPTIONAL_CONTENTS_STREAM_CODEC,
                 smithingForgeRecipe -> smithingForgeRecipe.template,
-                Ingredient.OPTIONAL_CONTENTS_STREAM_CODEC,
+                Ingredient.CONTENTS_STREAM_CODEC,
                 smithingForgeRecipe -> smithingForgeRecipe.base,
                 Ingredient.OPTIONAL_CONTENTS_STREAM_CODEC,
                 smithingForgeRecipe -> smithingForgeRecipe.addition,
