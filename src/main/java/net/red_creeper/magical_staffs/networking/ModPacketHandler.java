@@ -1,38 +1,29 @@
 package net.red_creeper.magical_staffs.networking;
 
-import net.red_creeper.magical_staffs.MagicalStaffs;
+import io.netty.util.AttributeKey;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraftforge.event.network.CustomPayloadEvent;
+import net.minecraftforge.network.simple.handler.SimpleHandlerProtocol;
+import net.minecraftforge.network.simple.handler.SimplePacket;
 import net.red_creeper.magical_staffs.networking.packet.*;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.*;
 
+import static net.red_creeper.magical_staffs.MagicalStaffs.MOD_ID;
+
 public class ModPacketHandler {
-    private static int PACKET_ID = 0;
     private static SimpleChannel INSTANCE;
 
-    private static int id() {
-        return PACKET_ID++;
-    }
-
     public static void register() {
-        INSTANCE = ChannelBuilder.named(MagicalStaffs.MOD_ID).simpleChannel();
+        INSTANCE = ChannelBuilder.named(MOD_ID).simpleChannel();
 
-        INSTANCE.messageBuilder(AddTimedEnchantmentsTooltipsC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(AddTimedEnchantmentsTooltipsC2SPacket::new)
-                .encoder(AddTimedEnchantmentsTooltipsC2SPacket::toBytes)
-                .consumerMainThread(AddTimedEnchantmentsTooltipsC2SPacket::handle)
-                .add();
+        AttributeKey<CustomPayloadEvent.Context> attributeKey = AttributeKey.newInstance(MOD_ID);
 
-        INSTANCE.messageBuilder(AddTimedEnchantmentsTooltipsS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(AddTimedEnchantmentsTooltipsS2CPacket::new)
-                .encoder(AddTimedEnchantmentsTooltipsS2CPacket::toBytes)
-                .consumerMainThread(AddTimedEnchantmentsTooltipsS2CPacket::handle)
-                .add();
-
-        INSTANCE.messageBuilder(StaffItemKeyBindC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(StaffItemKeyBindC2SPacket::new)
-                .encoder(StaffItemKeyBindC2SPacket::toBytes)
-                .consumerMainThread(StaffItemKeyBindC2SPacket::handle)
-                .add();
+        SimpleHandlerProtocol<RegistryFriendlyByteBuf, SimplePacket<CustomPayloadEvent.Context>> simpleHandlerProtocol = INSTANCE.protocol(attributeKey , NetworkProtocol.PLAY);
+        simpleHandlerProtocol.flow(PacketFlow.SERVERBOUND).addMain(AddTimedEnchantmentsTooltipsC2SPacket.class, AddTimedEnchantmentsTooltipsC2SPacket.STREAM_CODEC);
+        simpleHandlerProtocol.flow(PacketFlow.CLIENTBOUND).addMain(AddTimedEnchantmentsTooltipsS2CPacket.class, AddTimedEnchantmentsTooltipsS2CPacket.STREAM_CODEC);
+        simpleHandlerProtocol.flow(PacketFlow.SERVERBOUND).addMain(StaffItemKeyBindC2SPacket.class, StaffItemKeyBindC2SPacket.STREAM_CODEC);
     }
 
     public static <MSG> void sendToPlayer(MSG message, ServerPlayer player) {

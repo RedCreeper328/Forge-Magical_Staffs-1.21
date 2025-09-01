@@ -1,47 +1,30 @@
 package net.red_creeper.magical_staffs.networking.packet;
 
+import com.mojang.serialization.Codec;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.network.simple.handler.SimplePacket;
 import net.red_creeper.magical_staffs.networking.ModClientPacketHandler;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.event.network.CustomPayloadEvent;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class AddTimedEnchantmentsTooltipsS2CPacket {
-    private final List<Integer> list;
-    private final int slot;
+public record AddTimedEnchantmentsTooltipsS2CPacket(int slot, List<Integer> list) implements SimplePacket<CustomPayloadEvent.Context> {
+    public static final StreamCodec<RegistryFriendlyByteBuf, AddTimedEnchantmentsTooltipsS2CPacket> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.VAR_INT,
+            packet -> packet.slot,
+            ByteBufCodecs.fromCodec(Codec.INT.listOf()),
+            packet -> packet.list,
+            AddTimedEnchantmentsTooltipsS2CPacket::new
+    );
 
-    public AddTimedEnchantmentsTooltipsS2CPacket(int slot, List<Integer> list) {
-        this.list = list;
-        this.slot = slot;
-    }
-
-    public AddTimedEnchantmentsTooltipsS2CPacket(FriendlyByteBuf buffer) {
-        this.list = buffer.readCollection(ArrayList::new, FriendlyByteBuf::readInt);
-        this.slot = buffer.readByte();
-    }
-
-    public List<Integer> getList() {
-        return this.list;
-    }
-
-    public int getSlot() {
-        return this.slot;
-    }
-
-    public void handle(CustomPayloadEvent.Context context) {
-        context.enqueueWork(() -> {
-            // Make sure it's only executed on the physical client
-            if (FMLEnvironment.dist.isClient()) {
-                ModClientPacketHandler.handleAddTimedEnchantmentTooltips(this);
-            }
-        });
-        context.setPacketHandled(true);
-    }
-
-    public void toBytes(FriendlyByteBuf buffer) {
-        buffer.writeCollection(this.list, FriendlyByteBuf::writeInt);
-        buffer.writeByte(this.slot);
+    @Override
+    public boolean handle(CustomPayloadEvent.Context handler, CustomPayloadEvent.Context context) {
+        if (FMLEnvironment.dist.isClient()) {
+            ModClientPacketHandler.handleAddTimedEnchantmentTooltips(this);
+        }
+        return true;
     }
 }

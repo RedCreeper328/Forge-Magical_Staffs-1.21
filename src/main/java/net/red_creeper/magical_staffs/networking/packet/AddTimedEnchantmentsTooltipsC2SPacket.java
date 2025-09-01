@@ -1,29 +1,29 @@
 package net.red_creeper.magical_staffs.networking.packet;
 
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraftforge.network.simple.handler.SimplePacket;
 import net.red_creeper.magical_staffs.components.ModDataComponents;
 import net.red_creeper.magical_staffs.components.timed_enchantments.TimedEnchantments;
 import net.red_creeper.magical_staffs.networking.ModPacketHandler;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.network.CustomPayloadEvent;
 
-public record AddTimedEnchantmentsTooltipsC2SPacket(int slot) {
-    public AddTimedEnchantmentsTooltipsC2SPacket(FriendlyByteBuf buffer) {
-        this(buffer.readByte());
-    }
+public record AddTimedEnchantmentsTooltipsC2SPacket(int slot) implements SimplePacket<CustomPayloadEvent.Context> {
+    public static final StreamCodec<RegistryFriendlyByteBuf, AddTimedEnchantmentsTooltipsC2SPacket> STREAM_CODEC = StreamCodec.composite(
+            ByteBufCodecs.VAR_INT,
+            AddTimedEnchantmentsTooltipsC2SPacket::slot,
+            AddTimedEnchantmentsTooltipsC2SPacket::new
+    );
 
-    public void handle(CustomPayloadEvent.Context context) {
-        context.enqueueWork(() -> {
-            ServerPlayer player = context.getSender();
-            if (player == null) return;
-            TimedEnchantments timedEnchantments = player.containerMenu.getItems().get(this.slot).get(ModDataComponents.TIMED_ENCHANTMENTS.get());
-            if (timedEnchantments == null) return;
-            ModPacketHandler.sendToPlayer(new AddTimedEnchantmentsTooltipsS2CPacket(this.slot, timedEnchantments.serializeDurations()), player);
-        });
-        context.setPacketHandled(true);
-    }
-
-    public void toBytes(FriendlyByteBuf buffer) {
-        buffer.writeByte(this.slot);
+    @Override
+    public boolean handle(CustomPayloadEvent.Context handler, CustomPayloadEvent.Context context) {
+        ServerPlayer player = context.getSender();
+        if (player == null) return true;
+        TimedEnchantments timedEnchantments = player.containerMenu.getItems().get(this.slot).get(ModDataComponents.TIMED_ENCHANTMENTS.get());
+        if (timedEnchantments == null) return true;
+        ModPacketHandler.sendToPlayer(new AddTimedEnchantmentsTooltipsS2CPacket(this.slot, timedEnchantments.serializeDurations()), player);
+        return true;
     }
 }

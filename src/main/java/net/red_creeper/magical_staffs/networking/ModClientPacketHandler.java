@@ -13,8 +13,8 @@ public class ModClientPacketHandler {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return;
         AbstractContainerMenu abstractContainerMenu = player.containerMenu instanceof CreativeModeInventoryScreen.ItemPickerMenu ? player.inventoryMenu : player.containerMenu;
-        TimedEnchantments timedEnchantments = abstractContainerMenu.getItems().get(packet.getSlot()).get(ModDataComponents.TIMED_ENCHANTMENTS.get());
+        TimedEnchantments timedEnchantments = abstractContainerMenu.getItems().get(packet.slot()).get(ModDataComponents.TIMED_ENCHANTMENTS.get());
         if (timedEnchantments == null) return;
-        timedEnchantments.deserializeDurations(packet.getList());
+        timedEnchantments.deserializeDurations(packet.list());
     }
 }

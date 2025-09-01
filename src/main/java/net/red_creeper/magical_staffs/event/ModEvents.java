@@ -1,6 +1,5 @@
 package net.red_creeper.magical_staffs.event;
 
-import net.red_creeper.magical_staffs.MagicalStaffs;
 import net.red_creeper.magical_staffs.components.ModDataComponents;
 import net.red_creeper.magical_staffs.components.timed_enchantments.TimedEnchantment;
 import net.red_creeper.magical_staffs.components.timed_enchantments.TimedEnchantments;
@@ -37,7 +36,9 @@ import net.minecraftforge.fml.common.Mod;
 import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.*;
 
-@Mod.EventBusSubscriber(modid = MagicalStaffs.MOD_ID)
+import static net.red_creeper.magical_staffs.MagicalStaffs.MOD_ID;
+
+@Mod.EventBusSubscriber(modid = MOD_ID)
 @ParametersAreNonnullByDefault
 public class ModEvents {
     public static final Map<AbstractContainerMenu, Set<Integer>> TIMED_ITEM_STACKS = new HashMap<>();

@@ -1,8 +1,11 @@
 package net.red_creeper.magical_staffs;
 
 import com.mojang.logging.LogUtils;
+import net.minecraft.client.Minecraft;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.bus.BusGroup;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.red_creeper.magical_staffs.components.ModDataComponents;
 import net.red_creeper.magical_staffs.crafting.ModRecipeSerializers;
 import net.red_creeper.magical_staffs.effect.ModEffects;
@@ -10,13 +13,11 @@ import net.red_creeper.magical_staffs.item.ModItems;
 import net.red_creeper.magical_staffs.loot.ModLootModifiers;
 import net.red_creeper.magical_staffs.networking.ModPacketHandler;
 import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.red_creeper.magical_staffs.util.ModKeyBindings;
 import org.slf4j.Logger;
-
-import java.lang.invoke.MethodHandles;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(MagicalStaffs.MOD_ID)
@@ -38,32 +39,46 @@ public class MagicalStaffs
         ModLootModifiers.register(modBusGroup);
         ModRecipeSerializers.register(modBusGroup);
 
-        // Register the commonSetup method for mod loading
-        FMLCommonSetupEvent.getBus(modBusGroup).addListener(MagicalStaffs::commonSetup);
-
-        // Register ourselves for server and other game events we are interested in
-        BusGroup.DEFAULT.register(MethodHandles.lookup(), MagicalStaffs.class);
-
         // Register the mod items to a creative tab
         BuildCreativeModeTabContentsEvent.getBus(modBusGroup).addListener(ModItems::addCreative);
 
+        // Register the commonSetup method for mod loading
+        FMLCommonSetupEvent.getBus(modBusGroup).addListener(MagicalStaffs::commonSetup);
+
+        // Register the server and client setup methods
         ServerStartingEvent.BUS.addListener(MagicalStaffs::onServerStarting);
+        FMLClientSetupEvent.getBus(modBusGroup).addListener(MagicalStaffs::onClientSetup);
+
+        // Register the key binds on the client
+        RegisterKeyMappingsEvent.getBus(modBusGroup).addListener(MagicalStaffs::onKeyRegister);
     }
 
-    @SubscribeEvent
     private static void commonSetup(final FMLCommonSetupEvent event)
     {
         // Some common setup code
         LOGGER.info("HELLO FROM COMMON SETUP");
 
+        // Register the ModPacketHandler on both the server and client
         event.enqueueWork(ModPacketHandler::register);
     }
 
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
-    @SubscribeEvent
     public static void onServerStarting(ServerStartingEvent event)
     {
         // Do something when the server starts
         LOGGER.info("HELLO from server starting");
+    }
+
+    public static void onClientSetup(FMLClientSetupEvent event)
+    {
+        // Some client setup code
+        MagicalStaffs.LOGGER.info("HELLO FROM CLIENT SETUP");
+        MagicalStaffs.LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
+    }
+
+    public static void onKeyRegister(RegisterKeyMappingsEvent event) {
+        event.register(ModKeyBindings.CYCLE_EFFECTS_FORWARD);
+        event.register(ModKeyBindings.CYCLE_EFFECTS_BACKWARD);
+        event.register(ModKeyBindings.CYCLE_EFFECTS_INCREASE);
+        event.register(ModKeyBindings.CYCLE_EFFECTS_DECREASE);
     }
 }
