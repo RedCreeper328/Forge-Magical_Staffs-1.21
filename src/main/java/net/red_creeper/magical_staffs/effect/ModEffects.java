@@ -2,7 +2,7 @@ package net.red_creeper.magical_staffs.effect;
 
 import net.minecraft.core.Holder;
 import net.minecraft.world.effect.*;
-import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.bus.BusGroup;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -40,7 +40,7 @@ public class ModEffects {
         return null;
     }
 
-    public static void register(IEventBus eventBus) {
-        MOB_EFFECTS.register(eventBus);
+    public static void register(BusGroup busGroup) {
+        MOB_EFFECTS.register(busGroup);
     }
 }

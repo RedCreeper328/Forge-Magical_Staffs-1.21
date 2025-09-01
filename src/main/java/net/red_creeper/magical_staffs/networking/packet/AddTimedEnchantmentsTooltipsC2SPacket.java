@@ -7,15 +7,9 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.network.CustomPayloadEvent;
 
-public class AddTimedEnchantmentsTooltipsC2SPacket {
-    private final int slot;
-
+public record AddTimedEnchantmentsTooltipsC2SPacket(int slot) {
     public AddTimedEnchantmentsTooltipsC2SPacket(FriendlyByteBuf buffer) {
-        this.slot = buffer.readByte();
-    }
-
-    public AddTimedEnchantmentsTooltipsC2SPacket(int slot) {
-        this.slot = slot;
+        this(buffer.readByte());
     }
 
     public void handle(CustomPayloadEvent.Context context) {

@@ -40,7 +40,7 @@ import net.minecraft.world.item.enchantment.*;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -132,7 +132,7 @@ public class StaffItem extends Item {
         }
 
         // Initialize local variables
-        boolean isEnchantment = !otherItemStack.is(Items.POTION);
+        boolean isEnchantment = !otherItemStack.is(Items.POTION) && !otherItemStack.is(Items.SPLASH_POTION) && !otherItemStack.is(Items.LINGERING_POTION);
         StoredStaffEffects.Mutable storedStaffEffects = new StoredStaffEffects.Mutable(getStoredEffects(staffItemStack));
 
         // Update the level, points, and slots of the stored effect
@@ -474,7 +474,7 @@ public class StaffItem extends Item {
 
     private void prepareInfuse(int indexIncrement, ItemStack otherItemStack, ItemStack staffItemStack, Player player, StaffModes staffModes) {
         // Initialize local variables
-        boolean isEnchantment = !otherItemStack.is(Items.POTION);
+        boolean isEnchantment = !otherItemStack.is(Items.POTION) && !otherItemStack.is(Items.SPLASH_POTION) && !otherItemStack.is(Items.LINGERING_POTION);
         StoredStaffEffects storedStaffEffects = getStoredEffects(staffItemStack);
 
         // Stop if there is no offhand item
@@ -713,23 +713,21 @@ public class StaffItem extends Item {
     @Mod.EventBusSubscriber(modid = MOD_ID, value = Dist.CLIENT)
     public static class StaffItemEvents {
         @SubscribeEvent
-        public static void onClientTick(TickEvent.ClientTickEvent event) {
-            if (event.phase == TickEvent.Phase.END) {
-                while (ModKeyBindings.CYCLE_EFFECTS_FORWARD.consumeClick()) {
-                    ModPacketHandler.sendToServer(new StaffItemKeyBindC2SPacket(StaffItemKeyBindC2SPacket.KEY_BINDS.CYCLE_FORWARD));
-                }
+        public static void onClientTick(TickEvent.ClientTickEvent.Post event) {
+            while (ModKeyBindings.CYCLE_EFFECTS_FORWARD.consumeClick()) {
+                ModPacketHandler.sendToServer(new StaffItemKeyBindC2SPacket(StaffItemKeyBindC2SPacket.KEY_BINDS.CYCLE_FORWARD));
+            }
 
-                while (ModKeyBindings.CYCLE_EFFECTS_BACKWARD.consumeClick()) {
-                    ModPacketHandler.sendToServer(new StaffItemKeyBindC2SPacket(StaffItemKeyBindC2SPacket.KEY_BINDS.CYCLE_BACKWARD));
-                }
+            while (ModKeyBindings.CYCLE_EFFECTS_BACKWARD.consumeClick()) {
+                ModPacketHandler.sendToServer(new StaffItemKeyBindC2SPacket(StaffItemKeyBindC2SPacket.KEY_BINDS.CYCLE_BACKWARD));
+            }
 
-                while (ModKeyBindings.CYCLE_EFFECTS_INCREASE.consumeClick()) {
-                    ModPacketHandler.sendToServer(new StaffItemKeyBindC2SPacket(StaffItemKeyBindC2SPacket.KEY_BINDS.CYCLE_INCREASE));
-                }
+            while (ModKeyBindings.CYCLE_EFFECTS_INCREASE.consumeClick()) {
+                ModPacketHandler.sendToServer(new StaffItemKeyBindC2SPacket(StaffItemKeyBindC2SPacket.KEY_BINDS.CYCLE_INCREASE));
+            }
 
-                while (ModKeyBindings.CYCLE_EFFECTS_DECREASE.consumeClick()) {
-                    ModPacketHandler.sendToServer(new StaffItemKeyBindC2SPacket(StaffItemKeyBindC2SPacket.KEY_BINDS.CYCLE_DECREASE));
-                }
+            while (ModKeyBindings.CYCLE_EFFECTS_DECREASE.consumeClick()) {
+                ModPacketHandler.sendToServer(new StaffItemKeyBindC2SPacket(StaffItemKeyBindC2SPacket.KEY_BINDS.CYCLE_DECREASE));
             }
         }
     }

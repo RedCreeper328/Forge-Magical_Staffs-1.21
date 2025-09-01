@@ -5,12 +5,10 @@ import net.minecraft.network.chat.Style;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraftforge.fml.common.Mod;
 
 import java.util.List;
 import java.util.Optional;
 
-@Mod.EventBusSubscriber
 public class ForgeMaterials {
     public static final ForgeMaterial NONE = new ForgeMaterial("none", Optional.of(Items.AIR), Optional.empty(), 0, 9, 0, 0, Style.EMPTY);
     public static final ForgeMaterial WOOD = new ForgeMaterial("wood", Optional.empty(), Optional.of(ItemTags.PLANKS), 400, 8, 4, 0, Style.EMPTY.withColor(6697728));

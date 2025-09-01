@@ -31,7 +31,7 @@ import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerContainerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -161,9 +161,8 @@ public class ModEvents {
     }
 
     @SubscribeEvent
-    public static void tick(final TickEvent.ServerTickEvent event) {
+    public static void tick(final TickEvent.ServerTickEvent.Post event) {
         if (event.getServer().tickRateManager().isFrozen() && event.getServer().tickRateManager().frozenTicksToRun() <= 0) return;
-        if (event.phase == TickEvent.Phase.END) return;
         TimerSavedData.tick();
     }
 }

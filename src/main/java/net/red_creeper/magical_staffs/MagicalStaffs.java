@@ -1,20 +1,22 @@
 package net.red_creeper.magical_staffs;
 
 import com.mojang.logging.LogUtils;
+import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.eventbus.api.bus.BusGroup;
 import net.red_creeper.magical_staffs.components.ModDataComponents;
 import net.red_creeper.magical_staffs.crafting.ModRecipeSerializers;
 import net.red_creeper.magical_staffs.effect.ModEffects;
 import net.red_creeper.magical_staffs.item.ModItems;
 import net.red_creeper.magical_staffs.loot.ModLootModifiers;
 import net.red_creeper.magical_staffs.networking.ModPacketHandler;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.server.ServerStartingEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
+
+import java.lang.invoke.MethodHandles;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(MagicalStaffs.MOD_ID)
@@ -27,26 +29,29 @@ public class MagicalStaffs
 
     public MagicalStaffs(FMLJavaModLoadingContext context)
     {
-        IEventBus modEventBus = context.getModEventBus();
+        BusGroup modBusGroup = context.getModBusGroup();
 
         // Register mod registries
-        ModDataComponents.register(modEventBus);
-        ModEffects.register(modEventBus);
-        ModItems.register(modEventBus);
-        ModLootModifiers.register(modEventBus);
-        ModRecipeSerializers.register(modEventBus);
+        ModDataComponents.register(modBusGroup);
+        ModEffects.register(modBusGroup);
+        ModItems.register(modBusGroup);
+        ModLootModifiers.register(modBusGroup);
+        ModRecipeSerializers.register(modBusGroup);
 
         // Register the commonSetup method for mod loading
-        modEventBus.addListener(this::commonSetup);
+        FMLCommonSetupEvent.getBus(modBusGroup).addListener(MagicalStaffs::commonSetup);
 
         // Register ourselves for server and other game events we are interested in
-        MinecraftForge.EVENT_BUS.register(this);
+        BusGroup.DEFAULT.register(MethodHandles.lookup(), MagicalStaffs.class);
 
         // Register the mod items to a creative tab
-        modEventBus.addListener(ModItems::addCreative);
+        BuildCreativeModeTabContentsEvent.getBus(modBusGroup).addListener(ModItems::addCreative);
+
+        ServerStartingEvent.BUS.addListener(MagicalStaffs::onServerStarting);
     }
 
-    private void commonSetup(final FMLCommonSetupEvent event)
+    @SubscribeEvent
+    private static void commonSetup(final FMLCommonSetupEvent event)
     {
         // Some common setup code
         LOGGER.info("HELLO FROM COMMON SETUP");
@@ -56,7 +61,7 @@ public class MagicalStaffs
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call
     @SubscribeEvent
-    public void onServerStarting(ServerStartingEvent event)
+    public static void onServerStarting(ServerStartingEvent event)
     {
         // Do something when the server starts
         LOGGER.info("HELLO from server starting");

@@ -3,6 +3,7 @@ package net.red_creeper.magical_staffs.item;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Rarity;
+import net.minecraftforge.eventbus.api.bus.BusGroup;
 import net.red_creeper.magical_staffs.item.custom.StaffItem;
 import net.red_creeper.magical_staffs.components.forge_material.ForgeMaterials;
 import net.minecraft.ChatFormatting;
@@ -14,7 +15,6 @@ import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SmithingTemplateItem;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -75,7 +75,7 @@ public class ModItems {
         }
     }
 
-    public static void register(IEventBus eventBus) {
-        ITEMS.register(eventBus);
+    public static void register(BusGroup busGroup) {
+        ITEMS.register(busGroup);
     }
 }

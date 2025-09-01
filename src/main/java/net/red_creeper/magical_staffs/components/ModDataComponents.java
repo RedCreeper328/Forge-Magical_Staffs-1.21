@@ -1,6 +1,7 @@
 package net.red_creeper.magical_staffs.components;
 
 import com.mojang.serialization.Codec;
+import net.minecraftforge.eventbus.api.bus.BusGroup;
 import net.red_creeper.magical_staffs.components.forge_material.ForgeMaterial;
 import net.red_creeper.magical_staffs.components.staff_modes.StaffModes;
 import net.red_creeper.magical_staffs.components.stored_staff_effects.StoredStaffEffects;
@@ -8,7 +9,6 @@ import net.red_creeper.magical_staffs.components.timed_enchantments.TimedEnchant
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
-import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
 
@@ -33,7 +33,7 @@ public class ModDataComponents {
         return MOD_DATA_COMPONENTS.register(name, () -> builder.apply(DataComponentType.builder()).build());
     }
 
-    public static void register(IEventBus eventBus) {
-        MOD_DATA_COMPONENTS.register(eventBus);
+    public static void register(BusGroup busGroup) {
+        MOD_DATA_COMPONENTS.register(busGroup);
     }
 }

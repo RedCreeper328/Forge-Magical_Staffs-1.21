@@ -1,7 +1,7 @@
 package net.red_creeper.magical_staffs.crafting;
 
 import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.eventbus.api.bus.BusGroup;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
@@ -13,7 +13,7 @@ public class ModRecipeSerializers {
 
     public static final RegistryObject<RecipeSerializer<SmithingForgeRecipe>> SMITHING_FORGE = RECIPE_SERIALIZERS.register("smithing_forge", SmithingForgeRecipe.Serializer::new);
 
-    public static void register(IEventBus eventBus) {
-        RECIPE_SERIALIZERS.register(eventBus);
+    public static void register(BusGroup busGroup) {
+        RECIPE_SERIALIZERS.register(busGroup);
     }
 }
