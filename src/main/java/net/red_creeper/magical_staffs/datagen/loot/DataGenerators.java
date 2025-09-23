@@ -5,19 +5,13 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
 import net.minecraftforge.data.event.GatherDataEvent;
-import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import java.util.concurrent.CompletableFuture;
 
-import static net.red_creeper.magical_staffs.MagicalStaffs.MOD_ID;
-
-@Mod.EventBusSubscriber(modid = MOD_ID)
 @ParametersAreNonnullByDefault
 public class DataGenerators {
-    @SubscribeEvent
     public static void gatherData(GatherDataEvent event) {
         DataGenerator generator = event.getGenerator();
         PackOutput packOutput = generator.getPackOutput();

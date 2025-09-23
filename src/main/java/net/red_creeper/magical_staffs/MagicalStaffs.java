@@ -3,11 +3,13 @@ package net.red_creeper.magical_staffs;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
 import net.minecraftforge.eventbus.api.bus.BusGroup;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.red_creeper.magical_staffs.components.ModDataComponents;
 import net.red_creeper.magical_staffs.crafting.ModRecipeSerializers;
+import net.red_creeper.magical_staffs.datagen.loot.DataGenerators;
 import net.red_creeper.magical_staffs.effect.ModEffects;
 import net.red_creeper.magical_staffs.item.ModItems;
 import net.red_creeper.magical_staffs.loot.ModLootModifiers;
@@ -51,6 +53,9 @@ public class MagicalStaffs
 
         // Register the key binds on the client
         RegisterKeyMappingsEvent.getBus(modBusGroup).addListener(MagicalStaffs::onKeyRegister);
+
+        // Register the data generators
+        GatherDataEvent.getBus(modBusGroup).addListener(DataGenerators::gatherData);
     }
 
     private static void commonSetup(final FMLCommonSetupEvent event)
