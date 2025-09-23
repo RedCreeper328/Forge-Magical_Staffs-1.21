@@ -1,8 +1,13 @@
 package net.red_creeper.magical_staffs.event;
 
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraftforge.common.util.Result;
+import net.minecraftforge.event.entity.living.MobEffectEvent;
 import net.red_creeper.magical_staffs.components.ModDataComponents;
 import net.red_creeper.magical_staffs.components.timed_enchantments.TimedEnchantment;
 import net.red_creeper.magical_staffs.components.timed_enchantments.TimedEnchantments;
+import net.red_creeper.magical_staffs.effect.AttackMobEffect;
 import net.red_creeper.magical_staffs.effect.AttackMobEffectInstance;
 import net.red_creeper.magical_staffs.inventory.StaffItemListener;
 import net.red_creeper.magical_staffs.inventory.TimerListener;
@@ -139,6 +144,16 @@ public class ModEvents {
         if (event.getLevel() instanceof ServerLevel serverLevel && serverLevel.dimension() == ServerLevel.OVERWORLD) {
             TimerSavedData timerSavedData = serverLevel.getDataStorage().computeIfAbsent(TimerSavedData.TYPE);
             timerSavedData.setServerLevel(serverLevel);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLivingEffectCanApply(final MobEffectEvent.Applicable event) {
+        MobEffectInstance mobEffectInstance = event.getEffectInstance();
+        Holder<MobEffect> mobEffect = event.getEffectInstance().getEffect();
+        if (mobEffect.get() instanceof  AttackMobEffect && !(mobEffectInstance instanceof AttackMobEffectInstance)) {
+            event.setResult(Result.DENY);
+            event.getEntity().addEffect(new AttackMobEffectInstance(mobEffect, mobEffectInstance.getAmplifier(), mobEffectInstance.getDuration()));
         }
     }
 

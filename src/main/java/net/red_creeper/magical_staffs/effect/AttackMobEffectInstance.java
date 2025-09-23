@@ -10,7 +10,7 @@ public class AttackMobEffectInstance extends MobEffectInstance {
     public AttackMobEffectInstance(Holder<MobEffect> mobEffect, int amplifier, int duration) {
         super(mobEffect, duration, amplifier);
 
-        if (mobEffect.get() instanceof AttackMobEffect attackMobEffect) this.appliedMobEffectInstance = new MobEffectInstance(attackMobEffect.getAppliedEffect(), duration / 20, amplifier);
+        if (mobEffect.get() instanceof AttackMobEffect attackMobEffect) this.appliedMobEffectInstance = new MobEffectInstance(attackMobEffect.getAppliedEffect(), this.isInfiniteDuration() ? -1 : duration / 20, amplifier);
     }
 
     public MobEffectInstance getAppliedMobEffectInstance() {
