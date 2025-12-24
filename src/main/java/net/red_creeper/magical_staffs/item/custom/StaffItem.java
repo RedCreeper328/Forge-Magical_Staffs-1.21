@@ -6,7 +6,6 @@ import net.red_creeper.magical_staffs.components.ModDataComponents;
 import net.red_creeper.magical_staffs.components.staff_modes.StaffModes;
 import net.red_creeper.magical_staffs.components.stored_staff_effects.StoredStaffEffects;
 import net.red_creeper.magical_staffs.components.timed_enchantments.TimedEnchantments;
-import net.red_creeper.magical_staffs.effect.AttackMobEffectInstance;
 import net.red_creeper.magical_staffs.effect.ModEffects;
 import net.red_creeper.magical_staffs.components.forge_material.ForgeMaterial;
 import net.red_creeper.magical_staffs.components.forge_material.ForgeMaterials;
@@ -357,12 +356,11 @@ public class StaffItem extends Item {
         for (int i = 0; i < storedStaffEffects.size(false); i++) {
             Holder<MobEffect> potion = storedStaffEffects.getPotion(i);
             Holder<MobEffect> attackMobEffect = ModEffects.getAttackEffect(potion);
+            Holder<MobEffect> mobEffect = potion.get().isBeneficial() ? potion : attackMobEffect;
+            if (mobEffect == null) return;
+            MobEffectInstance mobEffectInstance = player.getEffect(mobEffect);
             int amplifier = storedStaffEffects.getValue(Either.right(potion), StoredStaffEffects.Indices.LEVEL) - 1;
-
-            if (potion.get().isBeneficial()) {
-                MobEffectInstance mobEffectInstance = player.getEffect(potion);
-                player.addEffect(new MobEffectInstance(potion, getActiveDuration(staffItemStack), amplifier + (mobEffectInstance != null ? mobEffectInstance.getAmplifier() + 1 : 0)));
-            } else if (attackMobEffect != null) player.addEffect(new AttackMobEffectInstance(attackMobEffect, amplifier, getActiveDuration(staffItemStack)));
+            player.addEffect(new MobEffectInstance(mobEffect, getActiveDuration(staffItemStack), amplifier + (mobEffectInstance != null ? mobEffectInstance.getAmplifier() + 1 : 0)));
         }
     }
 
